@@ -1,0 +1,226 @@
+{
+  "version": "1.0.0",
+  "course": "MATH 122",
+  "sections": ["2.5", "2.6"],
+  "language": "es",
+  "systemRules": [
+    "Actúa como un tutor de Cálculo 1 alineado exclusivamente con las secciones 2.5 y 2.6.",
+    "Está estrictamente prohibido usar el número 'e' como función o constante y la función 'ln' en ejercicios, pistas, soluciones o respuestas de IA.",
+    "No generes contenido fuera del banco curricular configurado.",
+    "Explica cada solución paso a paso y conserva la notación del material pedagógico.",
+    "Si una pregunta está fuera del temario, redirígela amablemente a una regla autorizada."
+  ],
+  "allowedTopics": [
+    "Regla de la cadena",
+    "Regla del producto",
+    "Regla del cociente",
+    "Funciones trigonométricas compuestas",
+    "Derivadas primera y segunda",
+    "Composición con tablas",
+    "Diferenciación implícita",
+    "Valores de f'(a)",
+    "Rectas tangentes",
+    "Tangentes horizontales",
+    "Movimiento armónico simple"
+  ],
+  "exerciseBank": [
+    {
+      "id": "chain-cos-cube",
+      "topic": "chain",
+      "tag": "Regla de la cadena",
+      "question": "Encuentra la derivada: y = cos(x^3)",
+      "answer": "-3x^2sin(x^3)",
+      "aliases": ["-3x²sin(x³)"],
+      "hint": "Identifica x^3 como la función interior.",
+      "steps": [
+        "u=x^3 y u'=3x^2.",
+        "d/dx[cos(u)] = -sin(u)u'.",
+        "y'=-3x^2sin(x^3)."
+      ]
+    },
+    {
+      "id": "chain-sin-polynomial",
+      "topic": "chain",
+      "tag": "Regla de la cadena",
+      "question": "Encuentra f'(x) si f(x)=sin(x^2+9x+8).",
+      "answer": "cos(x^2+9x+8)(2x+9)",
+      "aliases": ["(2x+9)cos(x²+9x+8)"],
+      "hint": "La parte interior es x^2+9x+8.",
+      "steps": [
+        "u=x^2+9x+8.",
+        "u'=2x+9.",
+        "f'(x)=cos(u)u'."
+      ]
+    },
+    {
+      "id": "chain-tan",
+      "topic": "chain",
+      "tag": "Seno de tangente",
+      "question": "Encuentra la derivada: y=sin(tan(7x)).",
+      "answer": "cos(tan(7x))sec^2(7x)(7)",
+      "aliases": ["7cos(tan(7x))sec²(7x)"],
+      "hint": "Aplica la regla de la cadena dos veces.",
+      "steps": [
+        "u=tan(7x).",
+        "u'=sec^2(7x)(7).",
+        "y'=cos(tan(7x))sec^2(7x)(7)."
+      ]
+    },
+    {
+      "id": "chain-cot",
+      "topic": "chain",
+      "tag": "Potencia de cotangente",
+      "question": "Encuentra la derivada: y=cot^3(sin(x)).",
+      "answer": "3(cot(sin(x)))^2(-csc^2(sin(x)))(cos(x))",
+      "aliases": ["-3cot²(sin(x))csc²(sin(x))cos(x)"],
+      "hint": "Hay tres capas: potencia, cotangente y seno.",
+      "steps": [
+        "Exterior: 3u^2u'.",
+        "d/dx[cot(v)]=-csc^2(v)v'.",
+        "d/dx[sin(x)]=cos(x)."
+      ]
+    },
+    {
+      "id": "chain-triple-sin",
+      "topic": "chain",
+      "tag": "Tres capas",
+      "question": "Encuentra la derivada: y=sin(sin(sin(x))).",
+      "answer": "cos(sin(sin(x)))cos(sin(x))cos(x)",
+      "aliases": [],
+      "hint": "Deriva desde la capa exterior hacia x.",
+      "steps": [
+        "La primera capa aporta cos(sin(sin(x))).",
+        "La segunda aporta cos(sin(x)).",
+        "La tercera aporta cos(x)."
+      ]
+    },
+    {
+      "id": "product-quotient",
+      "topic": "chain",
+      "tag": "Cadena + cociente",
+      "question": "Encuentra la derivada: h(x)=(x+3)^3/(x^2+4)^4.",
+      "answer": "[3(x+3)^2(x^2+4)-8x(x+3)^3]/(x^2+4)^5",
+      "aliases": [
+        "(3(x+3)^2(x^2+4)-8x(x+3)^3)/(x^2+4)^5"
+      ],
+      "hint": "Usa cociente y cadena dentro de cada potencia.",
+      "steps": [
+        "u=(x+3)^3, u'=3(x+3)^2.",
+        "v=(x^2+4)^4, v'=8x(x^2+4)^3.",
+        "h'=(vu'-uv')/v^2."
+      ]
+    },
+    {
+      "id": "second-derivative",
+      "topic": "chain",
+      "tag": "Primera y segunda derivada",
+      "question": "Si y=cos(x^2), encuentra y' y y''.",
+      "answer": "y'=-2xsin(x^2); y''=-2sin(x^2)-4x^2cos(x^2)",
+      "aliases": ["-2xsin(x²);-2sin(x²)-4x²cos(x²)"],
+      "hint": "Para y'' usa producto y cadena.",
+      "steps": [
+        "y'=-2xsin(x^2).",
+        "Deriva el producto.",
+        "y''=-2sin(x^2)-4x^2cos(x^2)."
+      ]
+    },
+    {
+      "id": "implicit-folium",
+      "topic": "implicit",
+      "tag": "Diferenciación implícita",
+      "question": "Encuentra y' por diferenciación implícita: x^3+y^3=6xy.",
+      "answer": "(6y-3x^2)/(3y^2-6x)",
+      "aliases": ["-(3x^2-6y)/(3y^2-6x)"],
+      "hint": "En y^3 aparece 3y^2y' y en xy usa producto.",
+      "steps": [
+        "3x^2+3y^2y'=6xy'+6y.",
+        "Agrupa los términos con y'.",
+        "y'=(6y-3x^2)/(3y^2-6x)."
+      ]
+    },
+    {
+      "id": "implicit-trig",
+      "topic": "implicit",
+      "tag": "Trigonométrica implícita",
+      "question": "Encuentra dy/dx: 5cos(x)sin(y)=2.",
+      "answer": "tan(x)tan(y)",
+      "aliases": ["sin(x)sin(y)/(cos(x)cos(y))"],
+      "hint": "Deriva el producto cos(x)sin(y).",
+      "steps": [
+        "0=5[-sin(x)sin(y)+cos(x)cos(y)y'].",
+        "Despeja cos(x)cos(y)y'.",
+        "y'=tan(x)tan(y)."
+      ]
+    },
+    {
+      "id": "implicit-value",
+      "topic": "implicit",
+      "tag": "Valor de f'(a)",
+      "question": "Si f(x)+x^2[f(x)]^4=18 y f(1)=2, encuentra f'(1).",
+      "answer": "-32/33",
+      "aliases": ["-0.9696969697"],
+      "hint": "Deriva tratando f(x) como y y sustituye x=1,y=2.",
+      "steps": [
+        "f'+2xf^4+4x^2f^3f'=0.",
+        "En (1,2): f'+32+32f'=0.",
+        "33f'=-32; f'(1)=-32/33."
+      ]
+    },
+    {
+      "id": "tangent-sinsin",
+      "topic": "tangent",
+      "tag": "Recta tangente",
+      "question": "Encuentra la recta tangente a y=sin(sin(x)) en (3π,0).",
+      "answer": "y=3π-x",
+      "aliases": ["y=-x+3pi"],
+      "hint": "Calcula y'=cos(sin(x))cos(x) y evalúa en 3π.",
+      "steps": [
+        "m=cos(0)cos(3π)=-1.",
+        "Usa el punto (3π,0).",
+        "y-0=-1(x-3π), así que y=3π-x."
+      ]
+    },
+    {
+      "id": "tangent-implicit",
+      "topic": "tangent",
+      "tag": "Tangente implícita",
+      "question": "Encuentra la recta tangente a x^2+y^2=25 en (3,4).",
+      "answer": "y-4=-(3/4)(x-3)",
+      "aliases": ["y=-3x/4+25/4"],
+      "hint": "De 2x+2yy'=0 obtén y'=-x/y.",
+      "steps": [
+        "m=-3/4.",
+        "Usa y-y0=m(x-x0).",
+        "y-4=-(3/4)(x-3)."
+      ]
+    },
+    {
+      "id": "horizontal",
+      "topic": "tangent",
+      "tag": "Tangente horizontal",
+      "question": "Encuentra los valores de x donde y=2x^3-8x tiene tangente horizontal.",
+      "answer": "x=-2/√3, 2/√3",
+      "aliases": ["x=±2/sqrt(3)"],
+      "hint": "Una tangente horizontal tiene y'=0.",
+      "steps": [
+        "y'=6x^2-8.",
+        "6x^2-8=0; x^2=4/3.",
+        "x=-2/√3 y x=2/√3."
+      ]
+    },
+    {
+      "id": "motion",
+      "topic": "chain",
+      "tag": "Movimiento armónico simple",
+      "question": "Si s=Acos(ωt+δ), encuentra la velocidad s'(t).",
+      "answer": "-Aωsin(ωt+δ)",
+      "aliases": ["-Aw sin(wt+d)"],
+      "hint": "Aplica la regla de la cadena a ωt+δ.",
+      "steps": [
+        "La derivada exterior de cos es -sin.",
+        "La derivada de ωt+δ es ω.",
+        "s'(t)=-Aωsin(ωt+δ)."
+      ]
+    }
+  ]
+}

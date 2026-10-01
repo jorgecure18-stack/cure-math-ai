@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: cure-math-ai
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/app-meta
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: OLLAMA_MODEL
+        sync: false

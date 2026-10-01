@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f2842" />
+    <meta name="description" content="cure.math AI: tutor interactivo de Cálculo 1 basado en tus materiales." />
+    <title>cure.math AI · Cálculo 1</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <span class="eyebrow">MATH 122 · SECCIONES 2.5 Y 2.6</span>
+          <span class="brand-lockup"><span class="brand-mark">c</span><span><b>cure.math</b><small>AI learning lab</small></span></span>
+          <h1>Aprende como si tuvieras tus apuntes abiertos.</h1>
+          <p>Un tutor que sigue tu temario, lee tus materiales y te guía paso a paso.</p>
+        </div>
+
+        <div class="top-actions">
+          <span class="status-pill"><i></i><span id="aiStatus">Tutor local listo</span></span>
+          <button class="language-toggle" id="languageToggle" type="button">EN</button>
+          <div class="streak">
+            Racha <strong id="streak">0</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div>
+          <span class="eyebrow light">LABORATORIO INFINITO</span>
+          <h2>Una derivada a la vez<em>.</em></h2>
+          <p>
+            Regla de la cadena, producto, cociente,
+            diferenciación implícita y rectas tangentes.
+            Sin temas fuera del currículo.
+          </p>
+        </div>
+
+        <div class="formula-card formula-board">
+          <span class="scribble">tu hoja de ruta</span>
+          <div>\(y=f(g(x))\)</div>
+          <b>\(y'=f'(g(x))\cdot g'(x)\)</b>
+          <small>exterior · interior · conecta las capas</small>
+        </div>
+      </section>
+
+      <section class="dashboard-strip" aria-label="Resumen de aprendizaje">
+        <div><span class="eyebrow">Tu sesión</span><strong id="sessionSummary">0 intentos · 0% precisión</strong></div>
+        <div class="update-note"><span class="live-dot"></span><span id="updateNote">Contenido sincronizado hoy</span></div>
+      </section>
+
+      <nav class="tabs" aria-label="Secciones">
+        <button class="tab active" data-view="practice">Práctica</button>
+        <button class="tab" data-view="sim">Simulacro</button>
+        <button class="tab" data-view="assistant">Tutor IA</button>
+        <button class="tab" data-view="rules">Currículo</button>
+      </nav>
+
+      <div class="layout">
+        <aside class="sidebar card">
+          <h2>Tu foco</h2>
+
+          <button class="topic selected" data-topic="all">
+            Mezcla inteligente <span>→</span>
+          </button>
+
+          <button class="topic" data-topic="chain">
+            Cadena y reglas combinadas <span>2.5</span>
+          </button>
+
+          <button class="topic" data-topic="implicit">
+            Implícita <span>2.6</span>
+          </button>
+
+          <button class="topic" data-topic="tangent">
+            Tangentes <span>2.5–2.6</span>
+          </button>
+
+          <label for="topicFilter">Filtro curricular</label>
+
+          <select id="topicFilter">
+            <option value="all">Todos los temas</option>
+            <option value="chain">Reglas de derivación</option>
+            <option value="implicit">Implícita</option>
+            <option value="tangent">Tangentes</option>
+          </select>
+
+          <div class="stats">
+            <div>
+              <b id="attempted">0</b>
+              <span>Intentos</span>
+            </div>
+
+            <div>
+              <b id="correct">0</b>
+              <span>Aciertos</span>
+            </div>
+
+            <div>
+              <b id="accuracy">0%</b>
+              <span>Precisión</span>
+            </div>
+          </div>
+
+          <div class="study-panel">
+            <span class="eyebrow">Ritmo</span>
+            <div id="progressList" class="progress-list"></div>
+          </div>
+        </aside>
+
+        <section class="content">
+          <section id="practiceView" class="view card">
+            <div class="section-head">
+              <div>
+                <span class="eyebrow">PREGUNTA <span id="number">1</span></span>
+                <h2>Práctica guiada</h2>
+              </div>
+
+              <button class="button secondary" id="newQuestion">
+                Otra pregunta ↻
+              </button>
+            </div>
+
+            <div class="coach-grid">
+              <div class="coach-card">
+                <span class="eyebrow">Plan de estudio</span>
+                <h3 id="studyGoal">Siguiente foco</h3>
+                <p id="studyReason">Analiza la estructura del ejercicio antes de elegir la regla.</p>
+                <small id="coachStrategy">La mejor estrategia es identificar la función exterior e interior.</small>
+              </div>
+
+              <div class="coach-card">
+                <span class="eyebrow">Qué revisar</span>
+                <div id="topicOverview" class="topic-overview">Regla de la cadena: reconoce la capa exterior e interior.</div>
+                <div id="learningReminder" class="learning-reminder">Explica el procedimiento en voz alta para consolidar la idea.</div>
+              </div>
+            </div>
+
+            <div id="questionArea"></div>
+          </section>
+
+          <section id="simView" class="view card hidden">
+            <div class="section-head">
+              <div>
+                <span class="eyebrow">8 PREGUNTAS</span>
+                <h2>Simulacro rápido</h2>
+              </div>
+
+              <button class="button primary" id="newSim">
+                Generar simulacro
+              </button>
+            </div>
+
+            <div id="simArea" class="sim-grid"></div>
+
+            <button class="button primary" id="gradeSim">Calificar</button>
+
+            <div id="simResult" class="result hidden"></div>
+          </section>
+
+          <section id="assistantView" class="view card hidden">
+            <span class="eyebrow">TUTOR CURRICULAR</span>
+            <h2>Tu mesa de estudio</h2>
+
+            <p class="muted">Pregunta sobre los temas configurados.</p>
+            <div class="universe-bar"><div><span class="eyebrow">MATH UNIVERSE</span><strong>Elige tu territorio</strong></div><select id="levelSelect"><option value="explore">Explorar</option><option value="school">Secundaria</option><option value="college">Universidad</option><option value="olympiad">Reto avanzado</option></select></div>
+            <div id="subjectGrid" class="subject-grid"></div>
+
+            <div class="coach-plan">
+              <div class="eyebrow">Ruta de aprendizaje</div>
+              <div id="learningPlan" class="mini-plan-list"></div>
+              <p id="learningGeneral" class="muted"></p>
+            </div>
+
+            <div class="assistant-tools">
+              <div class="quick-prompts">
+                <span class="eyebrow">Prueba una idea</span>
+                <div>
+                  <button class="chip" data-prompt="Explícame la regla de la cadena con una pista">Dame una pista</button>
+                  <button class="chip" data-prompt="Hazme una pregunta sobre diferenciación implícita">Hazme una pregunta</button>
+                  <button class="chip" data-prompt="Revisa mi procedimiento paso a paso">Revisa mi procedimiento</button>
+                </div>
+              </div>
+              <div class="material-dropzone" id="materialDropzone">
+                <input id="materialInput" type="file" multiple accept="image/png,image/jpeg,.pdf,.txt,.md,.docx,.pptx,.csv" hidden />
+                <div class="upload-icon">↑</div>
+                <strong>Trae tus materiales aquí</strong>
+                <span>PDF, apuntes o ejercicios · hasta 10 MB por archivo</span>
+                <button class="button secondary" type="button" id="chooseMaterials">Seleccionar archivos</button>
+                <div id="materialList" class="material-list"></div>
+              </div>
+            </div>
+
+            <div id="chatMessages" class="chat-messages"></div>
+
+            <form id="chatForm">
+              <textarea
+                id="chatInput"
+                rows="3"
+                placeholder="¿Cómo aplico la regla de la cadena?"
+                required
+              ></textarea>
+
+              <button class="button primary" id="chatSubmit">Preguntar <span>↗</span></button>
+            </form>
+          </section>
+
+          <section id="rulesView" class="view card hidden">
+            <span class="eyebrow">CONFIGURACIÓN CURRICULAR</span>
+            <h2>Temario activo</h2>
+            <div id="curriculumRules"></div>
+          </section>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer"><span>© 2026 cure.math AI</span><span>Diseñado para aprender, no para copiar.</span><span>Privacidad · Uso educativo</span></footer>
+    <div id="cookieBanner" class="cookie-banner hidden"><div><strong>Tu privacidad importa.</strong><p>Usamos almacenamiento local para recordar tu progreso y preferencia de idioma.</p></div><button class="button primary" id="acceptCookies">Entendido</button></div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
