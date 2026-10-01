@@ -167,15 +167,9 @@ app.get("/api/exercises/random", (req, res) => {
     if (!source.length) return res.status(404).json({ error: "No hay ejercicios para este tema." });
 
     const exercise = source[Math.floor(Math.random() * source.length)];
-    const english = req.query.language === "en";
-    return res.json({
-      ...exercise,
-      tag: english ? (exercise.tagEn || exercise.tag) : exercise.tag,
-      question: english ? (exercise.questionEn || exercise.question) : exercise.question,
-      hint: english ? (exercise.hintEn || exercise.hint) : exercise.hint,
-      steps: english ? (exercise.stepsEn || exercise.steps) : exercise.steps,
-      answered: false
-    });
+    // Keep both language variants in the payload so the client can switch
+    // language instantly without losing the current exercise.
+    return res.json({ ...exercise, answered: false });
   } catch (error) {
     return res.status(500).json({ error: "No se pudo cargar el banco de ejercicios.", details: error.message });
   }
