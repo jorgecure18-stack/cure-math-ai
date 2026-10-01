@@ -30,9 +30,9 @@
 
       <section class="hero">
         <div>
-          <span class="eyebrow light">LABORATORIO INFINITO</span>
-          <h2>Una derivada a la vez<em>.</em></h2>
-          <p>
+          <span class="eyebrow light" id="heroEyebrow">LABORATORIO INFINITO</span>
+          <h2 id="heroTitle">Una derivada a la vez<em>.</em></h2>
+          <p id="heroBody">
             Regla de la cadena, producto, cociente,
             diferenciación implícita y rectas tangentes.
             Sin temas fuera del currículo.
@@ -40,10 +40,10 @@
         </div>
 
         <div class="formula-card formula-board">
-          <span class="scribble">tu hoja de ruta</span>
+          <span class="scribble" id="roadmapLabel">tu hoja de ruta</span>
           <div>\(y=f(g(x))\)</div>
           <b>\(y'=f'(g(x))\cdot g'(x)\)</b>
-          <small>exterior · interior · conecta las capas</small>
+          <small id="roadmapHint">exterior · interior · conecta las capas</small>
         </div>
       </section>
 
@@ -91,22 +91,22 @@
           <div class="stats">
             <div>
               <b id="attempted">0</b>
-              <span>Intentos</span>
+              <span id="attemptsLabel">Intentos</span>
             </div>
 
             <div>
               <b id="correct">0</b>
-              <span>Aciertos</span>
+              <span id="correctLabel">Aciertos</span>
             </div>
 
             <div>
               <b id="accuracy">0%</b>
-              <span>Precisión</span>
+              <span id="accuracyLabel">Precisión</span>
             </div>
           </div>
 
           <div class="study-panel">
-            <span class="eyebrow">Ritmo</span>
+            <span class="eyebrow" id="rhythmLabel">Ritmo</span>
             <div id="progressList" class="progress-list"></div>
           </div>
         </aside>
@@ -145,8 +145,8 @@
           <section id="simView" class="view card hidden">
             <div class="section-head">
               <div>
-                <span class="eyebrow">8 PREGUNTAS</span>
-                <h2>Simulacro rápido</h2>
+                <span class="eyebrow" id="simEyebrow">8 PREGUNTAS</span>
+                <h2 id="simTitle">Simulacro rápido</h2>
               </div>
 
               <button class="button primary" id="newSim">
@@ -165,7 +165,7 @@
             <span class="eyebrow">TUTOR CURRICULAR</span>
             <h2 id="assistantTitle">Tu mesa de estudio</h2>
 
-            <p class="muted">Pregunta sobre los temas configurados.</p>
+            <p class="muted" id="assistantDescription">Pregunta sobre los temas configurados.</p>
             <div class="universe-bar"><div><span class="eyebrow">MATH UNIVERSE</span><strong id="universeLabel">Elige tu territorio</strong></div><label id="levelLabel" class="sr-only" for="levelSelect">Nivel</label><select id="levelSelect"><option value="explore">Explorar</option><option value="school">Secundaria</option><option value="college">Universidad</option><option value="olympiad">Reto avanzado</option></select></div>
             <div id="subjectGrid" class="subject-grid"></div>
 
@@ -204,7 +204,7 @@
                 required
               ></textarea>
 
-              <button class="button primary" id="chatSubmit">Preguntar <span>↗</span></button>
+            <button class="button primary" id="chatSubmit">Preguntar <span>↗</span></button>
             </form>
           </section>
 
@@ -217,7 +217,7 @@
       </div>
     </main>
 
-    <footer class="footer"><span>© 2026 cure.math AI</span><span id="footerTagline">Diseñado para aprender, no para copiar.</span><span>Privacidad · Uso educativo</span></footer>
+    <footer class="footer"><span>© 2026 cure.math AI</span><span id="footerTagline">Diseñado para aprender, no para copiar.</span><span id="footerPrivacy">Privacidad · Uso educativo</span></footer>
     <div id="cookieBanner" class="cookie-banner hidden"><div><strong id="cookieTitle">Tu privacidad importa.</strong><p id="cookieBody">Usamos almacenamiento local para recordar tu progreso y preferencia de idioma.</p></div><button class="button primary" id="acceptCookies">Entendido</button></div>
 
     <script type="module" src="/app.js"></script>

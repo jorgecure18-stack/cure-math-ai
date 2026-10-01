@@ -145,8 +145,8 @@ function updateStats() {
 }
 
 const UI_COPY = {
-  es: { hero: "Aprende como si tuvieras tus apuntes abiertos.", subtitle: "Un tutor que sigue tu temario, lee tus materiales y te guía paso a paso.", practice: "Práctica", sim: "Simulacro", tutor: "Tutor IA", rules: "Currículo", placeholder: "¿Cómo aplico la regla de la cadena?", status: "Tutor listo", synced: "Contenido sincronizado", streak: "Racha", session: "Tu sesión", attempts: "Intentos", correct: "Aciertos", accuracy: "Precisión", focus: "Tu foco", filter: "Filtro curricular", allTopics: "Todos los temas", plan: "Plan de estudio", review: "Qué revisar", activeGuide: "Guía activa", hint: "Pista", solution: "Ver procedimiento", check: "Comprobar", newQuestion: "Otra pregunta ↻", universe: "Elige tu territorio", level: "Nivel", route: "Ruta de aprendizaje", tryIdea: "Prueba una idea", materials: "Trae tus materiales aquí", materialHelp: "PDF, imágenes o apuntes · hasta 10 MB por archivo", choose: "Seleccionar archivos", syllabus: "Temario activo", thinking: "Pensando…", welcome: "Hola, soy cure.math AI. Puedo ayudarte con matemáticas paso a paso. Elige una materia o sube una foto del ejercicio para comenzar.", cookieTitle: "Tu privacidad importa.", cookieBody: "Usamos almacenamiento local para recordar tu progreso y preferencia de idioma.", cookieAccept: "Entendido", footer: "Diseñado para aprender, no para copiar." },
-  en: { hero: "Learn as if your notes were open beside you.", subtitle: "A tutor that follows your syllabus, reads your materials, and guides you step by step.", practice: "Practice", sim: "Mock exam", tutor: "AI tutor", rules: "Curriculum", placeholder: "How do I use the chain rule?", status: "Tutor ready", synced: "Content synced", streak: "Streak", session: "Your session", attempts: "Attempts", correct: "Correct", accuracy: "Accuracy", focus: "Your focus", filter: "Curriculum filter", allTopics: "All topics", plan: "Study plan", review: "Review next", activeGuide: "Active guide", hint: "Hint", solution: "Show steps", check: "Check", newQuestion: "New question ↻", universe: "Choose your territory", level: "Level", route: "Learning path", tryIdea: "Try an idea", materials: "Bring your materials here", materialHelp: "PDFs, images or notes · up to 10 MB per file", choose: "Choose files", syllabus: "Active curriculum", thinking: "Thinking…", welcome: "Hi, I am cure.math AI. I can guide you through math step by step. Choose a subject or upload a photo of your exercise to begin.", cookieTitle: "Your privacy matters.", cookieBody: "We use local storage to remember your progress and language preference.", cookieAccept: "Got it", footer: "Designed for learning, not copying." }
+  es: { hero: "Aprende como si tuvieras tus apuntes abiertos.", subtitle: "Un tutor que sigue tu temario, lee tus materiales y te guía paso a paso.", heroEyebrow: "LABORATORIO INFINITO", heroTitle: "Una derivada a la vez.", heroBody: "Regla de la cadena, producto, cociente, diferenciación implícita y rectas tangentes. Sin temas fuera del currículo.", roadmap: "tu hoja de ruta", roadmapHint: "exterior · interior · conecta las capas", rhythm: "Ritmo", question: "PREGUNTA", questions: "PREGUNTAS", privacy: "Privacidad · Uso educativo", generate: "Generar simulacro", grade: "Calificar", ask: "Preguntar", assistantDescription: "Pregunta sobre los temas configurados.", practice: "Práctica", sim: "Simulacro", tutor: "Tutor IA", rules: "Currículo", placeholder: "¿Cómo aplico la regla de la cadena?", status: "Tutor listo", synced: "Contenido sincronizado", streak: "Racha", session: "Tu sesión", attempts: "Intentos", correct: "Aciertos", accuracy: "Precisión", focus: "Tu foco", filter: "Filtro curricular", allTopics: "Todos los temas", plan: "Plan de estudio", review: "Qué revisar", activeGuide: "Guía activa", hint: "Pista", solution: "Ver procedimiento", check: "Comprobar", newQuestion: "Otra pregunta ↻", universe: "Elige tu territorio", level: "Nivel", route: "Ruta de aprendizaje", tryIdea: "Prueba una idea", materials: "Trae tus materiales aquí", materialHelp: "PDF, imágenes o apuntes · hasta 10 MB por archivo", choose: "Seleccionar archivos", syllabus: "Temario activo", thinking: "Pensando…", welcome: "Hola, soy cure.math AI. Puedo ayudarte con matemáticas paso a paso. Elige una materia o sube una foto del ejercicio para comenzar.", cookieTitle: "Tu privacidad importa.", cookieBody: "Usamos almacenamiento local para recordar tu progreso y preferencia de idioma.", cookieAccept: "Entendido", footer: "Diseñado para aprender, no para copiar." },
+  en: { hero: "Learn as if your notes were open beside you.", subtitle: "A tutor that follows your syllabus, reads your materials, and guides you step by step.", heroEyebrow: "INFINITE LAB", heroTitle: "One derivative at a time.", heroBody: "Chain, product and quotient rules, implicit differentiation, and tangent lines. Always inside your curriculum.", roadmap: "your roadmap", roadmapHint: "outer · inner · connect the layers", rhythm: "Pace", question: "QUESTION", questions: "QUESTIONS", privacy: "Privacy · Educational use", generate: "Generate mock exam", grade: "Grade", ask: "Ask", assistantDescription: "Ask about the configured topics.", practice: "Practice", sim: "Mock exam", tutor: "AI tutor", rules: "Curriculum", placeholder: "How do I use the chain rule?", status: "Tutor ready", synced: "Content synced", streak: "Streak", session: "Your session", attempts: "Attempts", correct: "Correct", accuracy: "Accuracy", focus: "Your focus", filter: "Curriculum filter", allTopics: "All topics", plan: "Study plan", review: "Review next", activeGuide: "Active guide", hint: "Hint", solution: "Show steps", check: "Check", newQuestion: "New question ↻", universe: "Choose your territory", level: "Level", route: "Learning path", tryIdea: "Try an idea", materials: "Bring your materials here", materialHelp: "PDFs, images or notes · up to 10 MB per file", choose: "Choose files", syllabus: "Active curriculum", thinking: "Thinking…", welcome: "Hi, I am cure.math AI. I can guide you through math step by step. Choose a subject or upload a photo of your exercise to begin.", cookieTitle: "Your privacy matters.", cookieBody: "We use local storage to remember your progress and language preference.", cookieAccept: "Got it", footer: "Designed for learning, not copying." }
 };
 
 function t(key) { return UI_COPY[state.language]?.[key] || UI_COPY.es[key] || key; }
@@ -158,8 +158,16 @@ const GUIDE_COPY = {
   tangent: { es: ["Rectas tangentes", "La pendiente es la derivada evaluada en el punto dado."], en: ["Tangent lines", "The slope is the derivative evaluated at the given point."] }
 };
 
+const GUIDE_STRATEGY = {
+  all: { es: "Observa el patrón general, identifica la estructura y luego deriva con la regla apropiada.", en: "Observe the pattern, identify the structure, then differentiate with the matching rule." },
+  chain: { es: "Deriva la capa externa, conserva la interna y multiplica por la derivada de la interna.", en: "Differentiate the outer layer, keep the inner layer, and multiply by its derivative." },
+  implicit: { es: "Agrupa términos con y' y resuélvelos al final.", en: "Group the y' terms and isolate them at the end." },
+  tangent: { es: "Usa la forma punto-pendiente y simplifica la ecuación final.", en: "Use point-slope form and simplify the final equation." }
+};
+
 function guideTitle(topic) { return GUIDE_COPY[topic]?.[state.language]?.[0] || TOPIC_GUIDES[topic]?.title || topic; }
 function guideFocus(topic) { return GUIDE_COPY[topic]?.[state.language]?.[1] || TOPIC_GUIDES[topic]?.focus || ""; }
+function guideStrategy(topic) { return GUIDE_STRATEGY[topic]?.[state.language] || TOPIC_GUIDES[topic]?.strategy || ""; }
 
 const UNIVERSAL_SUBJECTS = [
   { id: "arithmetic", icon: "＋", titleEs: "Aritmética", titleEn: "Arithmetic", noteEs: "Números, fracciones y proporciones", noteEn: "Numbers, fractions and ratios" },
@@ -197,13 +205,15 @@ function applyLanguage() {
     "#reviewLabel": "review", "#activeGuideLabel": "activeGuide", "#universeLabel": "universe",
     "#levelLabel": "level", "#routeLabel": "route", "#tryIdeaLabel": "tryIdea", "#materialsTitle": "materials",
     "#materialHelp": "materialHelp", "#chooseMaterials": "choose", "#rulesTitle": "syllabus",
-    "#cookieTitle": "cookieTitle", "#cookieBody": "cookieBody", "#acceptCookies": "cookieAccept", "#footerTagline": "footer"
+    "#cookieTitle": "cookieTitle", "#cookieBody": "cookieBody", "#acceptCookies": "cookieAccept", "#footerTagline": "footer",
+    "#heroEyebrow": "heroEyebrow", "#heroTitle": "heroTitle", "#heroBody": "heroBody", "#roadmapLabel": "roadmap", "#roadmapHint": "roadmapHint", "#rhythmLabel": "rhythm", "#attemptsLabel": "attempts", "#correctLabel": "correct", "#accuracyLabel": "accuracy", "#newQuestion": "newQuestion", "#simEyebrow": "questions", "#assistantDescription": "assistantDescription", "#footerPrivacy": "privacy", "#newSim": "generate", "#gradeSim": "grade", "#chatSubmit": "ask"
   };
   Object.entries(labels).forEach(([selector, key]) => { const element = $(selector); if (element) element.textContent = t(key); });
   const questionTitle = $("#practiceTitle"); if (questionTitle) questionTitle.textContent = state.language === "en" ? "Guided practice" : "Práctica guiada";
   const questionEyebrow = $("#questionEyebrow"); if (questionEyebrow) questionEyebrow.textContent = state.language === "en" ? "QUESTION" : "PREGUNTA";
   const simTitle = $("#simTitle"); if (simTitle) simTitle.textContent = state.language === "en" ? "Quick mock exam" : "Simulacro rápido";
   const assistantTitle = $("#assistantTitle"); if (assistantTitle) assistantTitle.textContent = state.language === "en" ? "Your study desk" : "Tu mesa de estudio";
+  const assistantDescription = $("#assistantDescription"); if (assistantDescription) assistantDescription.textContent = state.language === "en" ? "Ask about the configured topics." : "Pregunta sobre los temas configurados.";
   const level = $("#levelSelect"); if (level) [...level.options].forEach(option => { option.textContent = state.language === "en" ? ({ explore: "Explore", school: "School", college: "College", olympiad: "Advanced challenge" }[option.value]) : ({ explore: "Explorar", school: "Secundaria", college: "Universidad", olympiad: "Reto avanzado" }[option.value]); });
   const filter = $("#topicFilter"); if (filter) [...filter.options].forEach(option => { option.textContent = option.value === "all" ? t("allTopics") : option.value === "chain" ? (state.language === "en" ? "Derivative rules" : "Reglas de derivación") : option.value === "implicit" ? (state.language === "en" ? "Implicit differentiation" : "Implícita") : (state.language === "en" ? "Tangents" : "Tangentes"); });
   $$("[data-prompt]").forEach(button => { button.textContent = state.language === "en" ? (button.dataset.promptEn || button.dataset.prompt) : button.dataset.prompt; });
@@ -327,7 +337,7 @@ function updateCoachPanel() {
 
   $("#studyGoal").textContent = state.language === "en" ? `Next focus: ${guideTitle(focusTopic)}` : `Siguiente foco: ${guideTitle(focusTopic)}`;
   $("#studyReason").textContent = guideFocus(focusTopic);
-  $("#coachStrategy").textContent = focusGuide.strategy;
+  $("#coachStrategy").textContent = guideStrategy(focusTopic);
 
   const rows = ["chain", "implicit", "tangent"]
     .map(topic => {
@@ -401,7 +411,7 @@ function renderQuestion() {
       <div class="eyebrow">${t("activeGuide")}</div>
       <h3>${guideTitle(question.topic)}</h3>
       <p>${guideFocus(question.topic)}</p>
-      <small>${activeGuide.strategy}</small>
+      <small>${guideStrategy(question.topic)}</small>
     </div>
 
     <div class="question-meta">
