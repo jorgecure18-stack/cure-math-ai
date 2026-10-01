@@ -8,6 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const FRONTEND = path.join(ROOT, "frontend");
 const CURRICULUM_PATH = path.join(ROOT, "config", "curriculum_config.json");
+const MATH_APPS_PATH = path.join(ROOT, "config", "math_apps.json");
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -85,6 +86,10 @@ function visionRequest({ image, mimeType, prompt, language, subject, level, curr
 
 function readCurriculum() {
   return JSON.parse(fs.readFileSync(CURRICULUM_PATH, "utf8"));
+}
+
+function readMathApps() {
+  return JSON.parse(fs.readFileSync(MATH_APPS_PATH, "utf8"));
 }
 
 function localTutorAnswer(question, topic = "all", subject = "calculus") {
@@ -189,6 +194,35 @@ app.get("/api/learning-plan", (req, res) => {
     ],
     general: english ? "Practice one question, explain your work, and use a hint only when you get stuck." : "Practica una pregunta, explica tu procedimiento y usa la pista solo cuando te atasques."
   });
+});
+
+// Re-read the catalog for every request so content editors can publish updates
+// without restarting the production server.
+app.get("/api/math-apps", (req, res) => {
+  try {
+    const catalog = readMathApps();
+    const english = req.query.language === "en";
+    return res.json({
+      version: catalog.version,
+      updatedAt: catalog.updatedAt,
+      refreshPolicy: catalog.refreshPolicy,
+      language: english ? "en" : "es",
+      items: catalog.items.map(item => ({
+        id: item.id,
+        name: item.name,
+        icon: item.icon,
+        category: item.category,
+        description: english ? item.descriptionEn : item.descriptionEs,
+        benefit: english ? item.benefitEn : item.benefitEs,
+        officialUrl: item.officialUrl,
+        sourceUrl: item.sourceUrl,
+        sourceLabel: item.sourceLabel,
+        verifiedAt: item.verifiedAt
+      }))
+    });
+  } catch (error) {
+    return res.status(500).json({ error: "No se pudo leer el catálogo de apps matemáticas.", details: error.message });
+  }
 });
 
 app.post("/api/chat", quotaMiddleware, async (req, res) => {

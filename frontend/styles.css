@@ -616,6 +616,27 @@ select {
   font-size: 0.9rem;
 }
 
+.recommended-apps { margin: 20px 0 18px; padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(135deg, #fffdf7, #f3faf8); }
+.section-head.compact { margin-bottom: 5px; }
+.section-head.compact h3 { margin: 5px 0 0; font-size: 1.35rem; }
+.update-badge { align-self: flex-start; padding: 6px 9px; border: 1px solid #bfe0d9; border-radius: 999px; color: var(--teal); background: #eff9f6; font: 700 10px ui-monospace, monospace; white-space: nowrap; }
+.app-recommendation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.app-recommendation-card { display: flex; flex-direction: column; min-height: 220px; padding: 15px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.9); box-shadow: 0 8px 18px rgba(26,54,77,.05); transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.app-recommendation-card:hover { transform: translateY(-2px); border-color: #9bc8c0; box-shadow: 0 12px 24px rgba(26,54,77,.1); }
+.app-card-head { display: flex; align-items: center; gap: 10px; }
+.app-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: #fff1d8; font-size: 22px; }
+.app-card-head h4 { margin: 0 0 3px; font-size: 1rem; }
+.app-category { color: var(--teal); font: 800 10px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .05em; }
+.app-recommendation-card p { color: var(--muted); line-height: 1.5; font-size: 13px; }
+.app-benefit { display: flex; gap: 8px; margin: auto 0 14px; padding: 10px; border-radius: 11px; background: #f6fbfa; color: var(--ink); font-size: 12px; line-height: 1.4; }
+.app-benefit > span:first-child { color: var(--coral); font-weight: 900; }
+.app-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.app-card-link { color: var(--teal); font-size: 12px; font-weight: 900; text-decoration: none; }
+.app-card-link:hover { text-decoration: underline; }
+.app-source-link { color: var(--muted); font-size: 10px; text-decoration: none; }
+.app-source-link:hover { color: var(--ink); text-decoration: underline; }
+.apps-loading { padding: 18px 0; }
+
 .muted {
   color: var(--muted);
 }
@@ -629,6 +650,7 @@ select {
   .sim-grid { grid-template-columns: 1fr; }
   .topbar { flex-direction: column; }
   .coach-grid { grid-template-columns: 1fr; }
+  .app-recommendation-grid { grid-template-columns: 1fr; }
 }
 
 /* cure.math AI layer: notebook-inspired, fluid and bilingual-ready */

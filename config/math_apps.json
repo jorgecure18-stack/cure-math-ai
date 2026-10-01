@@ -1,0 +1,63 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-10-01",
+  "refreshPolicy": "Curated catalog re-read on every API request. Official links and verification dates are reviewed before publication.",
+  "items": [
+    {
+      "id": "photomath",
+      "name": "Photomath",
+      "icon": "📷",
+      "category": "Camera tutor",
+      "descriptionEs": "Escáner de cámara inteligente para reconocer ejercicios escritos o impresos con gran precisión.",
+      "descriptionEn": "A smart camera scanner that recognizes handwritten or printed math problems with high precision.",
+      "benefitEs": "Muestra la solución paso a paso para resolver dudas al instante.",
+      "benefitEn": "Shows the solution step by step so you can clear up a question quickly.",
+      "officialUrl": "https://www.photomath.com/",
+      "sourceUrl": "https://support.google.com/photomath/answer/14328660?hl=en",
+      "sourceLabel": "Photomath Help",
+      "verifiedAt": "2026-10-01"
+    },
+    {
+      "id": "microsoft-math-solver",
+      "name": "Microsoft Math Solver",
+      "icon": "🧠",
+      "category": "AI problem solver",
+      "descriptionEs": "Herramienta gratuita para trabajar problemas con explicaciones, gráficos y recursos relacionados.",
+      "descriptionEn": "A free tool for working through problems with explanations, graphs, and related learning resources.",
+      "benefitEs": "Conecta la resolución con videos tutoriales y gráficos interactivos.",
+      "benefitEn": "Connects the solution with tutorial videos and interactive graphs.",
+      "officialUrl": "https://mathsolver.microsoft.com/en",
+      "sourceUrl": "https://mathsolver.microsoft.com/en",
+      "sourceLabel": "Microsoft Math Solver",
+      "verifiedAt": "2026-10-01"
+    },
+    {
+      "id": "geogebra",
+      "name": "GeoGebra",
+      "icon": "📐",
+      "category": "Dynamic geometry",
+      "descriptionEs": "Estándar interactivo para geometría, álgebra, cálculo y visualización matemática.",
+      "descriptionEn": "An interactive standard for geometry, algebra, calculus, and mathematical visualization.",
+      "benefitEs": "Modela funciones en 2D y 3D y mueve variables en tiempo real para entender las fórmulas.",
+      "benefitEn": "Model functions in 2D and 3D and move variables in real time to understand the formulas.",
+      "officialUrl": "https://www.geogebra.org/download?lang=en",
+      "sourceUrl": "https://www.geogebra.org/download?lang=en",
+      "sourceLabel": "GeoGebra apps",
+      "verifiedAt": "2026-10-01"
+    },
+    {
+      "id": "khan-academy",
+      "name": "Khan Academy",
+      "icon": "🎓",
+      "category": "Full learning path",
+      "descriptionEs": "Cursos completos y educación matemática sin fines de lucro, pensados para aprender a tu ritmo.",
+      "descriptionEn": "Complete nonprofit learning paths designed for learning mathematics at your own pace.",
+      "benefitEs": "Ayuda a empezar desde cero con videos, práctica y progreso motivado por insignias.",
+      "benefitEn": "Helps you start from zero with videos, practice, and badge-based progress.",
+      "officialUrl": "https://www.khanacademy.org/",
+      "sourceUrl": "https://support.khanacademy.org/hc/en-us/articles/202483500-What-makes-Khan-Academy-a-not-for-profit",
+      "sourceLabel": "Khan Academy nonprofit",
+      "verifiedAt": "2026-10-01"
+    }
+  ]
+}

@@ -166,6 +166,31 @@ const TOOL_COPY = {
 
 function toolText(key) { return TOOL_COPY[state.language]?.[key] || TOOL_COPY.es[key] || key; }
 
+const APP_COPY = {
+  es: {
+    eyebrow: "RECURSOS CURADOS",
+    title: "Mejores apps de matemáticas",
+    intro: "Herramientas confiables para practicar, visualizar y aprender matemáticas.",
+    official: "Sitio oficial ↗",
+    source: "Fuente verificada",
+    updated: "Actualizado",
+    loading: "Cargando recomendaciones…",
+    error: "No se pudo cargar el catálogo ahora. Intenta de nuevo más tarde."
+  },
+  en: {
+    eyebrow: "CURATED RESOURCES",
+    title: "Best math apps",
+    intro: "Trusted tools for practicing, visualizing, and learning mathematics.",
+    official: "Official site ↗",
+    source: "Verified source",
+    updated: "Updated",
+    loading: "Loading recommendations…",
+    error: "The catalog could not load right now. Please try again later."
+  }
+};
+
+function appText(key) { return APP_COPY[state.language]?.[key] || APP_COPY.es[key] || key; }
+
 const GUIDE_COPY = {
   all: { es: ["Mezcla inteligente", "Practica varios tipos de derivadas para reconocer cuándo usar cada regla."], en: ["Smart mix", "Practice several derivative types and learn when each rule applies."] },
   chain: { es: ["Regla de la cadena", "Busca la función exterior e interior antes de derivar."], en: ["Chain rule", "Find the outer and inner functions before differentiating."] },
@@ -255,6 +280,10 @@ function applyLanguage() {
   $$(".topic").forEach(button => { const text = button.firstChild; if (text) text.textContent = `${topicLabels[button.dataset.topic]} `; });
   renderSubjectGrid();
   renderMaterials();
+  const appsEyebrow = $("#appsEyebrow"); if (appsEyebrow) appsEyebrow.textContent = appText("eyebrow");
+  const appsTitle = $("#recommendedAppsTitle"); if (appsTitle) appsTitle.textContent = appText("title");
+  const appsIntro = $("#appsIntro"); if (appsIntro) appsIntro.textContent = appText("intro");
+  loadMathApps();
   if (state.sim.length && !$("#simView")?.classList.contains("hidden")) renderSim();
   updateStats();
   updateCoachPanel();
@@ -643,6 +672,41 @@ async function loadLearningPlan() {
     $("#learningGeneral").textContent = data.general;
   } catch {
     $("#learningPlan").innerHTML = "";
+  }
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, character => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
+  }[character]));
+}
+
+async function loadMathApps() {
+  const grid = $("#mathAppsGrid");
+  if (!grid) return;
+  grid.innerHTML = `<p class="muted apps-loading">${appText("loading")}</p>`;
+  try {
+    const response = await fetch(`/api/math-apps?language=${state.language}`);
+    if (!response.ok) throw new Error("catalog unavailable");
+    const data = await response.json();
+    grid.innerHTML = data.items.map(item => `
+      <article class="app-recommendation-card">
+        <div class="app-card-head">
+          <span class="app-icon" aria-hidden="true">${escapeHtml(item.icon)}</span>
+          <div><h4>${escapeHtml(item.name)}</h4><span class="app-category">${escapeHtml(item.category)}</span></div>
+        </div>
+        <p>${escapeHtml(item.description)}</p>
+        <div class="app-benefit"><span aria-hidden="true">✦</span><span>${escapeHtml(item.benefit)}</span></div>
+        <div class="app-card-footer">
+          <a class="app-card-link" href="${escapeHtml(item.officialUrl)}" target="_blank" rel="noopener noreferrer">${appText("official")}</a>
+          <a class="app-source-link" href="${escapeHtml(item.sourceUrl)}" target="_blank" rel="noopener noreferrer" title="${appText("source")}">${appText("source")} · ${escapeHtml(item.verifiedAt)}</a>
+        </div>
+      </article>
+    `).join("");
+    const updated = $("#appsUpdated");
+    if (updated) updated.textContent = `${appText("updated")}: ${escapeHtml(data.updatedAt)}`;
+  } catch {
+    grid.innerHTML = `<p class="muted apps-loading">${appText("error")}</p>`;
   }
 }
 
