@@ -60,6 +60,8 @@
         <button class="tab" data-view="sim">Simulacro</button>
         <button class="tab" data-view="assistant">Tutor IA</button>
         <button class="tab" data-view="rules">Currículo</button>
+        <button class="tab" data-view="calculator">Calculadora</button>
+        <button class="tab" data-view="graph">Gráfica</button>
       </nav>
 
       <div class="layout">
@@ -210,6 +212,56 @@
 
             <button class="button primary" id="chatSubmit">Preguntar <span>↗</span></button>
             </form>
+          </section>
+
+          <section id="calculatorView" class="view card hidden">
+            <span class="eyebrow" id="calculatorEyebrow">HERRAMIENTA DE CÁLCULO</span>
+            <h2 id="calculatorTitle">Calculadora científica</h2>
+            <p class="muted" id="calculatorDescription">Calcula con funciones trigonométricas, potencias y paréntesis.</p>
+            <div class="calculator-shell">
+              <div class="calculator-screen">
+                <label class="sr-only" for="calculatorDisplay">Expresión matemática</label>
+                <input id="calculatorDisplay" inputmode="decimal" autocomplete="off" placeholder="sin(pi / 2)" />
+                <output id="calculatorResult" class="tool-result" aria-live="polite"></output>
+              </div>
+              <div class="calculator-toolbar">
+                <button class="button secondary" id="angleMode" type="button">Ángulo: Radianes</button>
+                <span class="muted">Enter = calcular · x² = x^2</span>
+              </div>
+              <div id="calculatorKeys" class="calculator-keys" aria-label="Teclado de calculadora">
+                <button data-key="clear">AC</button><button data-key="back">⌫</button><button data-key="(">(</button><button data-key=")">)</button><button data-key="/">÷</button>
+                <button data-key="sin(">sin</button><button data-key="cos(">cos</button><button data-key="tan(">tan</button><button data-key="sqrt(">√</button><button data-key="*">×</button>
+                <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button><button data-key="^">^</button><button data-key="-">−</button>
+                <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button><button data-key="pi">π</button><button data-key="+">+</button>
+                <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button><button data-key=".">.</button><button class="key-equals" data-key="equals">=</button>
+                <button data-key="0" class="key-zero">0</button><button data-key="e">e</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="graphView" class="view card hidden">
+            <span class="eyebrow" id="graphEyebrow">LABORATORIO VISUAL</span>
+            <h2 id="graphTitle">Graficador de funciones</h2>
+            <p class="muted" id="graphDescriptionHelp">Escribe una función de x y explora su forma.</p>
+            <div class="graph-controls">
+              <label for="graphExpression" id="graphExpressionLabel">f(x)</label>
+              <input id="graphExpression" value="sin(x)" spellcheck="false" autocomplete="off" aria-describedby="graphMessage" />
+              <button class="button primary" id="plotGraph" type="button">Graficar</button>
+              <button class="button secondary" id="zoomIn" type="button" aria-label="Acercar">＋</button>
+              <button class="button secondary" id="zoomOut" type="button" aria-label="Alejar">−</button>
+              <button class="button secondary" id="resetGraph" type="button">Restablecer</button>
+            </div>
+            <div class="range-controls">
+              <label for="graphMin" id="graphMinLabel">Desde</label><input id="graphMin" type="number" value="-10" step="1" />
+              <label for="graphMax" id="graphMaxLabel">Hasta</label><input id="graphMax" type="number" value="10" step="1" />
+              <button class="button secondary" id="applyRange" type="button">Aplicar rango</button>
+            </div>
+            <div class="graph-frame">
+              <canvas id="graphCanvas" aria-label="Gráfica de la función">Tu navegador no puede mostrar la gráfica.</canvas>
+              <p id="graphMessage" class="tool-message" aria-live="polite"></p>
+            </div>
+            <p id="graphDescription" class="graph-description" aria-live="polite"></p>
+            <p class="graph-help" id="graphHelp">Funciones disponibles: sin, cos, tan, sqrt, abs, log, exp, pi. Usa la rueda del mouse para zoom.</p>
           </section>
 
           <section id="rulesView" class="view card hidden">

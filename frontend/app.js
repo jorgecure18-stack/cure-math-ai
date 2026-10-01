@@ -1,3 +1,5 @@
+import { initCalculator, initGraph } from "./math-tools.js";
+
 const TOPIC_GUIDES = {
   all: {
     title: "Mezcla inteligente",
@@ -151,6 +153,19 @@ const UI_COPY = {
 
 function t(key) { return UI_COPY[state.language]?.[key] || UI_COPY.es[key] || key; }
 
+const TOOL_COPY = {
+  es: {
+    calculatorEyebrow: "HERRAMIENTA DE CÁLCULO", calculatorTitle: "Calculadora científica", calculatorDescription: "Calcula con funciones trigonométricas, potencias y paréntesis.",
+    angleHint: "Enter = calcular · x² = x^2", keypad: "Teclado de calculadora", graphEyebrow: "LABORATORIO VISUAL", graphTitle: "Graficador de funciones", graphDescriptionHelp: "Escribe una función de x y explora su forma.", expressionLabel: "f(x)", plot: "Graficar", reset: "Restablecer", from: "Desde", to: "Hasta", applyRange: "Aplicar rango", graphLabel: "Gráfica de la función", graphHelp: "Funciones disponibles: sin, cos, tan, sqrt, abs, log, exp, pi. Usa la rueda del mouse para zoom."
+  },
+  en: {
+    calculatorEyebrow: "CALCULATION TOOL", calculatorTitle: "Scientific calculator", calculatorDescription: "Calculate with trigonometric functions, powers, and parentheses.",
+    angleHint: "Enter = calculate · x² = x^2", keypad: "Calculator keypad", graphEyebrow: "VISUAL LAB", graphTitle: "Function grapher", graphDescriptionHelp: "Enter a function of x and explore its shape.", expressionLabel: "f(x)", plot: "Plot", reset: "Reset", from: "From", to: "To", applyRange: "Apply range", graphLabel: "Function graph", graphHelp: "Available functions: sin, cos, tan, sqrt, abs, log, exp, pi. Use the mouse wheel to zoom."
+  }
+};
+
+function toolText(key) { return TOOL_COPY[state.language]?.[key] || TOOL_COPY.es[key] || key; }
+
 const GUIDE_COPY = {
   all: { es: ["Mezcla inteligente", "Practica varios tipos de derivadas para reconocer cuándo usar cada regla."], en: ["Smart mix", "Practice several derivative types and learn when each rule applies."] },
   chain: { es: ["Regla de la cadena", "Busca la función exterior e interior antes de derivar."], en: ["Chain rule", "Find the outer and inner functions before differentiating."] },
@@ -211,7 +226,7 @@ function applyLanguage() {
   $("#languageToggle").textContent = state.language === "es" ? "EN" : "ES";
   $("#chatInput").placeholder = copy.placeholder;
   const tabs = $$(".tab");
-  [copy.practice, copy.sim, copy.tutor, copy.rules].forEach((label, index) => { if (tabs[index]) tabs[index].textContent = label; });
+  [copy.practice, copy.sim, copy.tutor, copy.rules, toolText("calculatorTitle"), toolText("graphTitle")].forEach((label, index) => { if (tabs[index]) tabs[index].textContent = label; });
   const labels = {
     "#streakLabel": "streak", "#sessionLabel": "session", "#attemptsLabel": "attempts", "#correctLabel": "correct",
     "#accuracyLabel": "accuracy", "#focusLabel": "focus", "#filterLabel": "filter", "#planLabel": "plan",
@@ -227,6 +242,12 @@ function applyLanguage() {
   const simTitle = $("#simTitle"); if (simTitle) simTitle.textContent = state.language === "en" ? "Quick mock exam" : "Simulacro rápido";
   const assistantTitle = $("#assistantTitle"); if (assistantTitle) assistantTitle.textContent = state.language === "en" ? "Your study desk" : "Tu mesa de estudio";
   const assistantDescription = $("#assistantDescription"); if (assistantDescription) assistantDescription.textContent = state.language === "en" ? "Ask about the configured topics." : "Pregunta sobre los temas configurados.";
+  const toolLabels = { "#calculatorEyebrow": "calculatorEyebrow", "#calculatorTitle": "calculatorTitle", "#calculatorDescription": "calculatorDescription", "#graphEyebrow": "graphEyebrow", "#graphTitle": "graphTitle", "#graphDescriptionHelp": "graphDescriptionHelp", "#graphExpressionLabel": "expressionLabel", "#plotGraph": "plot", "#resetGraph": "reset", "#graphMinLabel": "from", "#graphMaxLabel": "to", "#applyRange": "applyRange", "#graphHelp": "graphHelp" };
+  Object.entries(toolLabels).forEach(([selector, key]) => { const element = $(selector); if (element) element.textContent = toolText(key); });
+  const calculatorHint = document.querySelector("#calculatorView .calculator-toolbar .muted"); if (calculatorHint) calculatorHint.textContent = toolText("angleHint");
+  const keypad = $("#calculatorKeys"); if (keypad) keypad.setAttribute("aria-label", toolText("keypad"));
+  const canvas = $("#graphCanvas"); if (canvas) canvas.setAttribute("aria-label", toolText("graphLabel"));
+  calculatorTool?.setLanguage(state.language); graphTool?.setLanguage(state.language);
   const level = $("#levelSelect"); if (level) [...level.options].forEach(option => { option.textContent = state.language === "en" ? ({ explore: "Explore", school: "School", college: "College", olympiad: "Advanced challenge" }[option.value]) : ({ explore: "Explorar", school: "Secundaria", college: "Universidad", olympiad: "Reto avanzado" }[option.value]); });
   const filter = $("#topicFilter"); if (filter) [...filter.options].forEach(option => { option.textContent = option.value === "all" ? t("allTopics") : option.value === "chain" ? (state.language === "en" ? "Derivative rules" : "Reglas de derivación") : option.value === "implicit" ? (state.language === "en" ? "Implicit differentiation" : "Implícita") : (state.language === "en" ? "Tangents" : "Tangentes"); });
   $$("[data-prompt]").forEach(button => { button.textContent = state.language === "en" ? (button.dataset.promptEn || button.dataset.prompt) : button.dataset.prompt; });
@@ -768,6 +789,9 @@ $("#languageToggle").onclick = () => {
 $$('[data-prompt]').forEach(button => {
   button.onclick = () => { $("#chatInput").value = button.dataset.prompt; $("#chatForm").requestSubmit(); };
 });
+
+const calculatorTool = initCalculator({ language: state.language });
+const graphTool = initGraph({ language: state.language });
 
 updateStats();
 updateCoachPanel();
