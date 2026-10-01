@@ -1,0 +1,15 @@
+{
+  "name": "cure.math AI",
+  "short_name": "cure.math",
+  "description": "Interactive bilingual mathematics tutor",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6fbfa",
+  "theme_color": "#0f2842",
+  "icons": [{
+    "src": "/cure-family.svg",
+    "sizes": "any",
+    "type": "image/svg+xml",
+    "purpose": "any maskable"
+  }]
+}

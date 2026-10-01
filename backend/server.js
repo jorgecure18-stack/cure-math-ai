@@ -117,7 +117,7 @@ app.use((_req, res, next) => {
 app.use(express.static(FRONTEND));
 
 app.get("/api/app-meta", (_req, res) => {
-  res.json({ name: "cure.math AI", version: "0.5.0", updatedAt: new Date().toISOString(), status: "ready", capabilities: ["vision", "dynamic-curriculum", "free-tier", "bilingual-ui"], ai: modelConfig().provider });
+  res.json({ name: "cure.math AI", version: "0.6.0", updatedAt: new Date().toISOString(), status: "ready", capabilities: ["vision", "dynamic-curriculum", "free-tier", "bilingual-ui", "installable-web-app"], ai: modelConfig().provider });
 });
 
 app.get("/api/ai/status", (_req, res) => {
@@ -167,7 +167,15 @@ app.get("/api/exercises/random", (req, res) => {
     if (!source.length) return res.status(404).json({ error: "No hay ejercicios para este tema." });
 
     const exercise = source[Math.floor(Math.random() * source.length)];
-    return res.json({ ...exercise, answered: false });
+    const english = req.query.language === "en";
+    return res.json({
+      ...exercise,
+      tag: english ? (exercise.tagEn || exercise.tag) : exercise.tag,
+      question: english ? (exercise.questionEn || exercise.question) : exercise.question,
+      hint: english ? (exercise.hintEn || exercise.hint) : exercise.hint,
+      steps: english ? (exercise.stepsEn || exercise.steps) : exercise.steps,
+      answered: false
+    });
   } catch (error) {
     return res.status(500).json({ error: "No se pudo cargar el banco de ejercicios.", details: error.message });
   }

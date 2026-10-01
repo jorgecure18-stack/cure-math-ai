@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 64" role="img" aria-labelledby="title desc">
+  <title id="title">cure family mark</title>
+  <desc id="desc">Three connected figures forming a learning community</desc>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ef705d"/>
+      <stop offset="1" stop-color="#1d9a95"/>
+    </linearGradient>
+  </defs>
+  <path d="M16 48c0-11 7-18 16-18s16 7 16 18" fill="none" stroke="url(#g)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M49 48c0-12 8-21 18-21s18 9 18 21" fill="none" stroke="#0f2842" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="32" cy="18" r="9" fill="#ef705d"/>
+  <circle cx="67" cy="14" r="10" fill="#1d9a95"/>
+  <circle cx="49" cy="7" r="5" fill="#0f2842"/>
+  <path d="M40 13c4-4 8-5 13-4" fill="none" stroke="#f0b45b" stroke-width="3" stroke-linecap="round"/>
+</svg>

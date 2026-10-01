@@ -169,6 +169,18 @@ function guideTitle(topic) { return GUIDE_COPY[topic]?.[state.language]?.[0] || 
 function guideFocus(topic) { return GUIDE_COPY[topic]?.[state.language]?.[1] || TOPIC_GUIDES[topic]?.focus || ""; }
 function guideStrategy(topic) { return GUIDE_STRATEGY[topic]?.[state.language] || TOPIC_GUIDES[topic]?.strategy || ""; }
 
+function localizedExercise(question) {
+  if (!question) return question;
+  const english = state.language === "en";
+  return {
+    ...question,
+    tag: english ? (question.tagEn || question.tag) : question.tag,
+    question: english ? (question.questionEn || question.question) : question.question,
+    hint: english ? (question.hintEn || question.hint) : question.hint,
+    steps: english ? (question.stepsEn || question.steps) : question.steps
+  };
+}
+
 const UNIVERSAL_SUBJECTS = [
   { id: "arithmetic", icon: "＋", titleEs: "Aritmética", titleEn: "Arithmetic", noteEs: "Números, fracciones y proporciones", noteEn: "Numbers, fractions and ratios" },
   { id: "algebra", icon: "x²", titleEs: "Álgebra", titleEn: "Algebra", noteEs: "Ecuaciones, funciones y patrones", noteEn: "Equations, functions and patterns" },
@@ -189,6 +201,7 @@ function renderSubjectGrid() {
 
 function applyLanguage() {
   const copy = UI_COPY[state.language];
+  document.documentElement.lang = state.language;
   const hero = document.querySelector(".topbar h1");
   const subtitle = document.querySelector(".topbar p");
   if (hero) hero.textContent = copy.hero;
@@ -221,6 +234,7 @@ function applyLanguage() {
   $$(".topic").forEach(button => { const text = button.firstChild; if (text) text.textContent = `${topicLabels[button.dataset.topic]} `; });
   renderSubjectGrid();
   renderMaterials();
+  if (state.sim.length && !$("#simView")?.classList.contains("hidden")) renderSim();
   updateStats();
   updateCoachPanel();
   loadLearningPlan();
@@ -367,7 +381,7 @@ function updateCoachPanel() {
 
 async function getExercise(topic = state.topic) {
   const recent = state.recent[topic] || [];
-  const params = new URLSearchParams({ topic });
+  const params = new URLSearchParams({ topic, language: state.language });
 
   if (recent.length) {
     params.set("exclude", recent.join(","));
@@ -401,7 +415,7 @@ async function newQuestion() {
 }
 
 function renderQuestion() {
-  const question = state.question;
+  const question = localizedExercise(state.question);
   const activeGuide = TOPIC_GUIDES[question.topic] || TOPIC_GUIDES.all;
 
   $("#number").textContent = state.number;
@@ -510,24 +524,30 @@ function checkAnswer() {
   save();
 }
 
-async function makeSim() {
-  state.sim = await Promise.all(
-    Array.from({ length: 8 }, () => getExercise("all"))
-  );
-
+function renderSim() {
   $("#simArea").innerHTML = state.sim
     .map(
-      (question, index) => `
+      (rawQuestion, index) => {
+        const question = localizedExercise(rawQuestion);
+        return `
         <article class="sim-card">
           <h3>${index + 1}. ${question.tag}</h3>
           <p>${question.question}</p>
-          <input data-index="${index}" placeholder="Tu respuesta…" />
+          <input data-index="${index}" placeholder="${state.language === "en" ? "Your answer…" : "Tu respuesta…"}" />
         </article>
-      `
+      `;
+      }
     )
     .join("");
 
   $("#simResult").classList.add("hidden");
+}
+
+async function makeSim() {
+  state.sim = await Promise.all(
+    Array.from({ length: 8 }, () => getExercise("all"))
+  );
+  renderSim();
 }
 
 function gradeSim() {
