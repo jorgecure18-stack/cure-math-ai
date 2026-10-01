@@ -211,7 +211,7 @@ app.get("/api/math-apps", (req, res) => {
         id: item.id,
         name: item.name,
         icon: item.icon,
-        category: item.category,
+        category: english ? item.categoryEn : item.categoryEs,
         description: english ? item.descriptionEn : item.descriptionEs,
         benefit: english ? item.benefitEn : item.benefitEs,
         officialUrl: item.officialUrl,
