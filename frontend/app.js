@@ -156,11 +156,11 @@ function t(key) { return UI_COPY[state.language]?.[key] || UI_COPY.es[key] || ke
 const TOOL_COPY = {
   es: {
     calculatorEyebrow: "HERRAMIENTA DE CÁLCULO", calculatorTitle: "Calculadora científica", calculatorDescription: "Calcula con funciones trigonométricas, potencias y paréntesis.",
-    angleHint: "Enter = calcular · x² = x^2", keypad: "Teclado de calculadora", graphEyebrow: "LABORATORIO VISUAL", graphTitle: "Graficador de funciones", graphDescriptionHelp: "Escribe una función de x y explora su forma.", expressionLabel: "f(x)", plot: "Graficar", reset: "Restablecer", from: "Desde", to: "Hasta", applyRange: "Aplicar rango", graphLabel: "Gráfica de la función", graphHelp: "Funciones disponibles: sin, cos, tan, sqrt, abs, log, exp, pi. Usa la rueda del mouse para zoom."
+    angleHint: "Enter = calcular · x² = x^2", keypad: "Teclado de calculadora", graphEyebrow: "LABORATORIO VISUAL", graphTitle: "Graficador de funciones", graphDescriptionHelp: "Escribe una función de x y explora su forma.", expressionLabel: "f(x)", plot: "Graficar", reset: "Restablecer", from: "Desde", to: "Hasta", applyRange: "Aplicar rango", graphLabel: "Gráfica de la función", graphHelp: "Funciones: sin, cos, tan, sin⁻¹, cos⁻¹, tan⁻¹, sqrt, abs, log, exp, pi. Usa la rueda para zoom."
   },
   en: {
     calculatorEyebrow: "CALCULATION TOOL", calculatorTitle: "Scientific calculator", calculatorDescription: "Calculate with trigonometric functions, powers, and parentheses.",
-    angleHint: "Enter = calculate · x² = x^2", keypad: "Calculator keypad", graphEyebrow: "VISUAL LAB", graphTitle: "Function grapher", graphDescriptionHelp: "Enter a function of x and explore its shape.", expressionLabel: "f(x)", plot: "Plot", reset: "Reset", from: "From", to: "To", applyRange: "Apply range", graphLabel: "Function graph", graphHelp: "Available functions: sin, cos, tan, sqrt, abs, log, exp, pi. Use the mouse wheel to zoom."
+    angleHint: "Enter = calculate · x² = x^2", keypad: "Calculator keypad", graphEyebrow: "VISUAL LAB", graphTitle: "Function grapher", graphDescriptionHelp: "Enter a function of x and explore its shape.", expressionLabel: "f(x)", plot: "Plot", reset: "Reset", from: "From", to: "To", applyRange: "Apply range", graphLabel: "Function graph", graphHelp: "Functions: sin, cos, tan, sin⁻¹, cos⁻¹, tan⁻¹, sqrt, abs, log, exp, pi. Use the mouse wheel to zoom."
   }
 };
 

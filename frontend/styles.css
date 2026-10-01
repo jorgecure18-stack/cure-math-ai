@@ -722,13 +722,25 @@ body { background: radial-gradient(circle at 10% 0%, #fffdf7 0, transparent 35%)
 .calculator-screen input:focus { box-shadow: 0 0 0 3px #8bd8cf; }
 .tool-result { min-height: 29px; color: #f7dca0; font: 700 1.35rem Georgia, serif; }
 .tool-result.bad { color: #ffb3a6; }
-.calculator-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 11px 0; }
+.calculator-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 11px 0; flex-wrap: wrap; }
 .calculator-toolbar .button { padding: 8px 11px; font-size: 12px; }
+.calculator-memory { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin: 10px 0 13px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 12px; background: #f7faf9; }
+.memory-label { color: var(--muted); font-size: 11px; font-weight: 800; margin-right: 3px; }
+.calculator-memory button { min-width: 39px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 8px; background: white; color: var(--ink); font-size: 11px; font-weight: 800; cursor: pointer; }
+.calculator-memory button:hover { border-color: var(--teal); color: var(--teal); }
+.memory-value { margin-left: auto; color: var(--teal); font: 700 12px ui-monospace, monospace; }
 .calculator-keys { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
 .calculator-keys button { min-height: 42px; border: 1px solid var(--line); border-radius: 11px; background: #fff; color: var(--ink); font-weight: 800; cursor: pointer; transition: transform .15s ease, background .15s ease; }
 .calculator-keys button:hover, .calculator-keys button:focus-visible { background: var(--teal-soft); transform: translateY(-1px); outline: 3px solid #8bd8cf; outline-offset: 2px; }
 .calculator-keys .key-equals { background: var(--coral); color: white; border-color: var(--coral); }
-.calculator-keys .key-zero { grid-column: span 3; }
+.calculator-keys .key-zero { grid-column: span 2; }
+.calculator-history { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 13px; }
+.history-heading { display: flex; justify-content: space-between; align-items: center; color: var(--ink); font-size: 13px; }
+.text-button { border: 0; background: transparent; color: var(--teal); cursor: pointer; font-size: 11px; font-weight: 800; }
+.calculator-history ol { display: grid; gap: 5px; max-height: 150px; margin: 9px 0 0; padding: 0; overflow-y: auto; list-style: none; }
+.calculator-history li button { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--muted); text-align: right; font: 700 11px ui-monospace, monospace; cursor: pointer; }
+.calculator-history li button:hover { color: var(--ink); border-color: var(--teal); background: var(--teal-soft); }
+.history-empty { color: var(--muted); font-size: 11px; padding: 5px 0; }
 .graph-controls, .range-controls { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin: 17px 0 10px; }
 .graph-controls label, .range-controls label { font-weight: 800; font-size: 13px; }
 .graph-controls input, .range-controls input { min-width: 90px; border: 1px solid var(--line); border-radius: 10px; padding: 10px; color: var(--ink); background: #fff; }
@@ -742,4 +754,4 @@ body { background: radial-gradient(circle at 10% 0%, #fffdf7 0, transparent 35%)
 .chat-message { white-space: pre-wrap; }
 .material-item { align-items: center; padding: 7px 9px; border-radius: 9px; background: #fff; }
 .material-item button { border: 0; background: transparent; color: var(--bad); cursor: pointer; font-weight: 800; }
-@media (max-width: 800px) { .top-actions { flex-wrap: wrap; justify-content: flex-end; } .status-pill { display: none; } .assistant-tools, .subject-grid { grid-template-columns: 1fr; } .dashboard-strip, .footer, .chat-footer, .universe-bar { align-items: flex-start; flex-direction: column; } .cookie-banner { flex-direction: column; align-items: stretch; } .calculator-toolbar { align-items: flex-start; flex-direction: column; } #graphCanvas { height: 290px; } }
+@media (max-width: 800px) { .top-actions { flex-wrap: wrap; justify-content: flex-end; } .status-pill { display: none; } .assistant-tools, .subject-grid { grid-template-columns: 1fr; } .dashboard-strip, .footer, .chat-footer, .universe-bar { align-items: flex-start; flex-direction: column; } .cookie-banner { flex-direction: column; align-items: stretch; } .calculator-toolbar { align-items: flex-start; } .calculator-toolbar .muted { width: 100%; } #graphCanvas { height: 290px; } }

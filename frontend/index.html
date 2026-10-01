@@ -238,15 +238,30 @@
               </div>
               <div class="calculator-toolbar">
                 <button class="button secondary" id="angleMode" type="button">Ángulo: Radianes</button>
-                <span class="muted">Enter = calcular · x² = x^2</span>
+                <button class="button secondary" id="copyResult" type="button">Copiar resultado</button>
+                <span class="muted" id="calculatorHint">Enter = calcular · x² = x^2</span>
+              </div>
+              <div class="calculator-memory" aria-label="Memoria de calculadora">
+                <span class="memory-label" id="calculatorMemoryLabel">Memoria</span>
+                <button type="button" data-memory="clear">MC</button>
+                <button type="button" data-memory="recall">MR</button>
+                <button type="button" data-memory="add">M+</button>
+                <button type="button" data-memory="subtract">M−</button>
+                <button type="button" data-memory="store">MS</button>
+                <span class="memory-value" id="calculatorMemoryValue">0</span>
               </div>
               <div id="calculatorKeys" class="calculator-keys" aria-label="Teclado de calculadora">
                 <button data-key="clear">AC</button><button data-key="back">⌫</button><button data-key="(">(</button><button data-key=")">)</button><button data-key="/">÷</button>
-                <button data-key="sin(">sin</button><button data-key="cos(">cos</button><button data-key="tan(">tan</button><button data-key="sqrt(">√</button><button data-key="*">×</button>
+                <button data-key="sin(">sin</button><button data-key="cos(">cos</button><button data-key="tan(">tan</button><button data-key="asin(">sin⁻¹</button><button data-key="sqrt(">√</button>
+                <button data-key="acos(">cos⁻¹</button><button data-key="atan(">tan⁻¹</button><button data-key="log(">log</button><button data-key="abs(">abs</button><button data-key="*">×</button>
                 <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button><button data-key="^">^</button><button data-key="-">−</button>
                 <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button><button data-key="pi">π</button><button data-key="+">+</button>
-                <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button><button data-key=".">.</button><button class="key-equals" data-key="equals">=</button>
-                <button data-key="0" class="key-zero">0</button><button data-key="e">e</button>
+                <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button><button data-key=".">.</button><button data-key="!">!</button>
+                <button data-key="0" class="key-zero">0</button><button data-key="e">e</button><button data-key="%">mod</button><button class="key-equals" data-key="equals">=</button>
+              </div>
+              <div class="calculator-history">
+                <div class="history-heading"><strong id="calculatorHistoryTitle">Historial</strong><button type="button" class="text-button" id="clearCalculatorHistory">Borrar</button></div>
+                <ol id="calculatorHistory" aria-live="polite"></ol>
               </div>
             </div>
           </section>
