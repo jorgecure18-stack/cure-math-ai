@@ -690,4 +690,9 @@ body { background: radial-gradient(circle at 10% 0%, #fffdf7 0, transparent 35%)
 .footer { max-width: 1240px; margin: 0 auto; padding: 18px 22px 30px; display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 11px; }
 .cookie-banner { position: fixed; z-index: 20; left: 18px; right: 18px; bottom: 18px; display: flex; justify-content: space-between; align-items: center; gap: 18px; max-width: 650px; margin: auto; padding: 15px 17px; border: 1px solid var(--line); border-radius: 17px; background: rgba(255,255,255,.96); box-shadow: 0 20px 55px rgba(17,42,67,.2); }
 .cookie-banner p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.subject-card:focus-visible, .chip:focus-visible, .tab:focus-visible, .topic:focus-visible, .button:focus-visible, .language-toggle:focus-visible { outline: 3px solid #8bd8cf; outline-offset: 3px; }
+.chat-message { white-space: pre-wrap; }
+.material-item { align-items: center; padding: 7px 9px; border-radius: 9px; background: #fff; }
+.material-item button { border: 0; background: transparent; color: var(--bad); cursor: pointer; font-weight: 800; }
 @media (max-width: 800px) { .top-actions { flex-wrap: wrap; justify-content: flex-end; } .status-pill { display: none; } .assistant-tools, .subject-grid { grid-template-columns: 1fr; } .dashboard-strip, .footer, .chat-footer, .universe-bar { align-items: flex-start; flex-direction: column; } .cookie-banner { flex-direction: column; align-items: stretch; } }

@@ -12,6 +12,9 @@ const CURRICULUM_PATH = path.join(ROOT, "config", "curriculum_config.json");
 const app = express();
 const port = Number(process.env.PORT || 3000);
 app.set("trust proxy", 1);
+const AI_BASE_URL = String(process.env.AI_BASE_URL || "").replace(/\/$/, "");
+const AI_API_KEY = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || "";
+const AI_MODEL = process.env.AI_MODEL || process.env.OPENAI_MODEL || "gpt-4o-mini";
 
 const systemPrompt = `Eres cure.math AI, un tutor universal de matemáticas: claro, paciente, riguroso y socrático. Puedes ayudar con aritmética, álgebra, geometría, cálculo, estadística, probabilidad, álgebra lineal, matemática discreta y matemática aplicada. Adapta el nivel al estudiante. Da una pista antes de revelar una solución completa, comprueba supuestos y usa notación legible. Si el usuario adjunta materiales, trátalos como contexto de estudio y no inventes contenido que no puedas leer. Si una pregunta no es matemática, redirígela con amabilidad.`;
 const visionSystemPrompt = `${systemPrompt} Analiza la imagen o documento recibido, extrae con cuidado el enunciado matemático y enseña el procedimiento paso a paso. RESTRICCIÓN PEDAGÓGICA INMUTABLE: no uses el número e ni la función ln en ejemplos, fórmulas, pistas o respuestas. Si aparecen en el material, explica la idea con una alternativa permitida o indica que esa parte queda fuera del temario.`;
@@ -37,19 +40,46 @@ function imageData(value) {
   return String(value || "").replace(/^data:[^;]+;base64,/, "").replace(/\s/g, "");
 }
 
-function visionRequest({ image, mimeType, prompt, language, subject, level, curriculum }) {
-  return fetch("http://localhost:11434/api/chat", {
+function modelConfig() {
+  if (AI_BASE_URL && AI_API_KEY) return { provider: "openai-compatible", model: AI_MODEL };
+  return { provider: "ollama", model: process.env.OLLAMA_MODEL || "llama3" };
+}
+
+async function chatRequest({ messages, model, images = [] }) {
+  const config = modelConfig();
+  if (config.provider === "openai-compatible") {
+    const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${AI_API_KEY}` },
+      body: JSON.stringify({ model: model || config.model, messages, temperature: 0.2 })
+    });
+    return { response, parse: async data => data?.choices?.[0]?.message?.content };
+  }
+
+  const ollamaMessages = messages.map(message => ({
+    ...message,
+    ...(message.images?.length ? { images: message.images } : {})
+  }));
+  const response = await fetch("http://localhost:11434/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: process.env.OLLAMA_VISION_MODEL || "llava",
+      model: model || process.env.OLLAMA_MODEL || "llama3",
       stream: false,
-      messages: [
-        { role: "system", content: `${visionSystemPrompt}\nMateria: ${subject}. Nivel: ${level}. Idioma: ${language}. Currículo dinámico: ${curriculum.allowedTopics.join(", ")}` },
-        { role: "user", content: prompt || "Analiza este ejercicio, transcribe lo esencial y enséñame el primer paso.", images: [imageData(image)] }
-      ],
+      messages: ollamaMessages,
       options: { temperature: 0.2 }
     })
+  });
+  return { response, parse: async data => data?.message?.content };
+}
+
+function visionRequest({ image, mimeType, prompt, language, subject, level, curriculum }) {
+  return chatRequest({
+    model: process.env.OLLAMA_VISION_MODEL || process.env.AI_VISION_MODEL || "llava",
+    messages: [
+      { role: "system", content: `${visionSystemPrompt}\nMateria: ${subject}. Nivel: ${level}. Idioma: ${language}. Currículo dinámico: ${curriculum.allowedTopics.join(", ")}` },
+      { role: "user", content: prompt || "Analiza este ejercicio, transcribe lo esencial y enséñame el primer paso.", images: [imageData(image)] }
+    ]
   });
 }
 
@@ -87,7 +117,12 @@ app.use((_req, res, next) => {
 app.use(express.static(FRONTEND));
 
 app.get("/api/app-meta", (_req, res) => {
-  res.json({ name: "cure.math AI", version: "0.4.0", updatedAt: new Date().toISOString(), status: "ready", capabilities: ["vision", "dynamic-curriculum", "free-tier"] });
+  res.json({ name: "cure.math AI", version: "0.5.0", updatedAt: new Date().toISOString(), status: "ready", capabilities: ["vision", "dynamic-curriculum", "free-tier", "bilingual-ui"], ai: modelConfig().provider });
+});
+
+app.get("/api/ai/status", (_req, res) => {
+  const config = modelConfig();
+  res.json({ provider: config.provider, model: config.model, vision: Boolean(process.env.AI_VISION_MODEL || process.env.OLLAMA_VISION_MODEL), configured: config.provider === "openai-compatible" || Boolean(process.env.OLLAMA_URL) });
 });
 
 app.get("/api/quota", (req, res) => {
@@ -108,10 +143,10 @@ app.post("/api/vision/tutor", quotaMiddleware, express.json({ limit: "15mb" }), 
   try {
     const curriculum = readCurriculum();
     const language = req.body?.language === "en" ? "English" : "Spanish";
-    const response = await visionRequest({ image, mimeType, prompt: req.body?.prompt, language, subject: req.body?.subject || "calculus", level: req.body?.level || "explore", curriculum });
-    if (!response.ok) throw new Error(await response.text());
-    const data = await response.json();
-    return res.json({ mode: "vision", answer: data?.message?.content || "No pude interpretar la imagen.", model: process.env.OLLAMA_VISION_MODEL || "llava" });
+    const vision = await visionRequest({ image, mimeType, prompt: req.body?.prompt, language, subject: req.body?.subject || "calculus", level: req.body?.level || "explore", curriculum });
+    if (!vision.response.ok) throw new Error(await vision.response.text());
+    const data = await vision.response.json();
+    return res.json({ mode: "vision", answer: await vision.parse(data) || "No pude interpretar la imagen.", model: process.env.OLLAMA_VISION_MODEL || process.env.AI_VISION_MODEL || "llava" });
   } catch (error) {
     console.warn("Visión Ollama no disponible:", error.message);
     return res.json({ mode: "vision-fallback", answer: "Recibí tu material, pero el modelo de visión no está disponible todavía. Configura OLLAMA_VISION_MODEL (por ejemplo, llava) para analizar fotos y PDFs.", notice: "El archivo no se guardó en el servidor." });
@@ -138,14 +173,19 @@ app.get("/api/exercises/random", (req, res) => {
   }
 });
 
-app.get("/api/learning-plan", (_req, res) => {
+app.get("/api/learning-plan", (req, res) => {
+  const english = req.query.language === "en";
   return res.json({
-    focus: [
+    focus: english ? [
+      { title: "Chain rule", tip: "Identify layers before differentiating." },
+      { title: "Implicit differentiation", tip: "Group the y' terms and isolate them." },
+      { title: "Tangent lines", tip: "The slope is y' evaluated at the point." }
+    ] : [
       { title: "Regla de la cadena", tip: "Identifica capas antes de derivar." },
       { title: "Diferenciación implícita", tip: "Agrupa los términos con y' y despeja." },
       { title: "Rectas tangentes", tip: "La pendiente es y' evaluada en el punto." }
     ],
-    general: "Practica una pregunta, explica tu procedimiento y usa la pista solo cuando te atasques."
+    general: english ? "Practice one question, explain your work, and use a hint only when you get stuck." : "Practica una pregunta, explica tu procedimiento y usa la pista solo cuando te atasques."
   });
 });
 
@@ -163,22 +203,14 @@ app.post("/api/chat", quotaMiddleware, async (req, res) => {
     const subject = typeof req.body?.subject === "string" ? req.body.subject : "calculus";
     const level = typeof req.body?.level === "string" ? req.body.level : "explore";
     const materialContext = typeof req.body?.materialContext === "string" ? req.body.materialContext.slice(0, 16000) : "";
-    const ollamaResponse = await fetch("http://localhost:11434/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: process.env.OLLAMA_MODEL || "llama3",
-        messages: [
-          {
-            role: "system",
-            content: `${systemPrompt}\nCurso seleccionado: ${subject}. Nivel: ${level}. Currículo disponible como referencia: ${curriculum.allowedTopics.join(", ")}. Tema seleccionado: ${topic}. Responde en ${language}, con una pista primero y pasos cortos. No des por hecho la respuesta del estudiante.`
-          },
-          { role: "user", content: materialContext ? `${question}\n\nMateriales disponibles:\n${materialContext}` : question }
-        ],
-        stream: false
-      })
+    const { response: ollamaResponse, parse } = await chatRequest({
+      messages: [
+        {
+          role: "system",
+          content: `${systemPrompt}\nCurso seleccionado: ${subject}. Nivel: ${level}. Currículo disponible como referencia: ${curriculum.allowedTopics.join(", ")}. Tema seleccionado: ${topic}. Responde en ${language}, con una pista primero y pasos cortos. No des por hecho la respuesta del estudiante.`
+        },
+        { role: "user", content: materialContext ? `${question}\n\nMateriales disponibles:\n${materialContext}` : question }
+      ]
     });
 
     if (!ollamaResponse.ok) {
@@ -192,7 +224,7 @@ app.post("/api/chat", quotaMiddleware, async (req, res) => {
     }
 
     const data = await ollamaResponse.json();
-    const answer = data?.message?.content || "No pude generar una respuesta.";
+    const answer = await parse(data) || "No pude generar una respuesta.";
 
     return res.json({ answer });
   } catch (error) {

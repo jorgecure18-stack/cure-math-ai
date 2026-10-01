@@ -141,30 +141,42 @@ function updateStats() {
       : 0
   }%`;
   const summary = $("#sessionSummary");
-  if (summary) summary.textContent = `${profile.attempted} intentos · ${profile.attempted ? Math.round((profile.correct / profile.attempted) * 100) : 0}% precisión`;
+  if (summary) summary.textContent = `${profile.attempted} ${t("attempts").toLowerCase()} · ${profile.attempted ? Math.round((profile.correct / profile.attempted) * 100) : 0}% ${t("accuracy").toLowerCase()}`;
 }
 
 const UI_COPY = {
-  es: { hero: "Aprende como si tuvieras tus apuntes abiertos.", subtitle: "Un tutor que sigue tu temario, lee tus materiales y te guía paso a paso.", ask: "Preguntar al tutor", practice: "Práctica", sim: "Simulacro", tutor: "Tutor IA", rules: "Temario", placeholder: "¿Cómo aplico la regla de la cadena?", status: "Tutor local listo", synced: "Contenido sincronizado hoy" },
-  en: { hero: "Learn as if your notes were open beside you.", subtitle: "A tutor that follows your syllabus, reads your materials, and guides you step by step.", ask: "Ask the tutor", practice: "Practice", sim: "Mock exam", tutor: "AI tutor", rules: "Syllabus", placeholder: "How do I use the chain rule?", status: "Local tutor ready", synced: "Content synced today" }
+  es: { hero: "Aprende como si tuvieras tus apuntes abiertos.", subtitle: "Un tutor que sigue tu temario, lee tus materiales y te guía paso a paso.", practice: "Práctica", sim: "Simulacro", tutor: "Tutor IA", rules: "Currículo", placeholder: "¿Cómo aplico la regla de la cadena?", status: "Tutor listo", synced: "Contenido sincronizado", streak: "Racha", session: "Tu sesión", attempts: "Intentos", correct: "Aciertos", accuracy: "Precisión", focus: "Tu foco", filter: "Filtro curricular", allTopics: "Todos los temas", plan: "Plan de estudio", review: "Qué revisar", activeGuide: "Guía activa", hint: "Pista", solution: "Ver procedimiento", check: "Comprobar", newQuestion: "Otra pregunta ↻", universe: "Elige tu territorio", level: "Nivel", route: "Ruta de aprendizaje", tryIdea: "Prueba una idea", materials: "Trae tus materiales aquí", materialHelp: "PDF, imágenes o apuntes · hasta 10 MB por archivo", choose: "Seleccionar archivos", syllabus: "Temario activo", thinking: "Pensando…", welcome: "Hola, soy cure.math AI. Puedo ayudarte con matemáticas paso a paso. Elige una materia o sube una foto del ejercicio para comenzar.", cookieTitle: "Tu privacidad importa.", cookieBody: "Usamos almacenamiento local para recordar tu progreso y preferencia de idioma.", cookieAccept: "Entendido", footer: "Diseñado para aprender, no para copiar." },
+  en: { hero: "Learn as if your notes were open beside you.", subtitle: "A tutor that follows your syllabus, reads your materials, and guides you step by step.", practice: "Practice", sim: "Mock exam", tutor: "AI tutor", rules: "Curriculum", placeholder: "How do I use the chain rule?", status: "Tutor ready", synced: "Content synced", streak: "Streak", session: "Your session", attempts: "Attempts", correct: "Correct", accuracy: "Accuracy", focus: "Your focus", filter: "Curriculum filter", allTopics: "All topics", plan: "Study plan", review: "Review next", activeGuide: "Active guide", hint: "Hint", solution: "Show steps", check: "Check", newQuestion: "New question ↻", universe: "Choose your territory", level: "Level", route: "Learning path", tryIdea: "Try an idea", materials: "Bring your materials here", materialHelp: "PDFs, images or notes · up to 10 MB per file", choose: "Choose files", syllabus: "Active curriculum", thinking: "Thinking…", welcome: "Hi, I am cure.math AI. I can guide you through math step by step. Choose a subject or upload a photo of your exercise to begin.", cookieTitle: "Your privacy matters.", cookieBody: "We use local storage to remember your progress and language preference.", cookieAccept: "Got it", footer: "Designed for learning, not copying." }
 };
 
+function t(key) { return UI_COPY[state.language]?.[key] || UI_COPY.es[key] || key; }
+
+const GUIDE_COPY = {
+  all: { es: ["Mezcla inteligente", "Practica varios tipos de derivadas para reconocer cuándo usar cada regla."], en: ["Smart mix", "Practice several derivative types and learn when each rule applies."] },
+  chain: { es: ["Regla de la cadena", "Busca la función exterior e interior antes de derivar."], en: ["Chain rule", "Find the outer and inner functions before differentiating."] },
+  implicit: { es: ["Diferenciación implícita", "Cuando aparece y, trátala como función de x y multiplica por y'."], en: ["Implicit differentiation", "Treat y as a function of x and multiply its terms by y'."] },
+  tangent: { es: ["Rectas tangentes", "La pendiente es la derivada evaluada en el punto dado."], en: ["Tangent lines", "The slope is the derivative evaluated at the given point."] }
+};
+
+function guideTitle(topic) { return GUIDE_COPY[topic]?.[state.language]?.[0] || TOPIC_GUIDES[topic]?.title || topic; }
+function guideFocus(topic) { return GUIDE_COPY[topic]?.[state.language]?.[1] || TOPIC_GUIDES[topic]?.focus || ""; }
+
 const UNIVERSAL_SUBJECTS = [
-  { id: "arithmetic", icon: "＋", title: "Aritmética", note: "Números, fracciones y proporciones" },
-  { id: "algebra", icon: "x²", title: "Álgebra", note: "Ecuaciones, funciones y patrones" },
-  { id: "geometry", icon: "△", title: "Geometría", note: "Formas, medidas y demostraciones" },
-  { id: "calculus", icon: "∫", title: "Cálculo", note: "Límites, derivadas e integrales" },
-  { id: "statistics", icon: "σ", title: "Estadística", note: "Datos, probabilidad e inferencia" },
-  { id: "linear", icon: "▦", title: "Álgebra lineal", note: "Vectores, matrices y espacios" },
-  { id: "discrete", icon: "∑", title: "Discreta", note: "Lógica, conteo y algoritmos" },
-  { id: "physics", icon: "↗", title: "Matemática aplicada", note: "Modelos para ciencia y vida real" }
+  { id: "arithmetic", icon: "＋", titleEs: "Aritmética", titleEn: "Arithmetic", noteEs: "Números, fracciones y proporciones", noteEn: "Numbers, fractions and ratios" },
+  { id: "algebra", icon: "x²", titleEs: "Álgebra", titleEn: "Algebra", noteEs: "Ecuaciones, funciones y patrones", noteEn: "Equations, functions and patterns" },
+  { id: "geometry", icon: "△", titleEs: "Geometría", titleEn: "Geometry", noteEs: "Formas, medidas y demostraciones", noteEn: "Shapes, measures and proofs" },
+  { id: "calculus", icon: "∫", titleEs: "Cálculo", titleEn: "Calculus", noteEs: "Límites, derivadas e integrales", noteEn: "Limits, derivatives and integrals" },
+  { id: "statistics", icon: "σ", titleEs: "Estadística", titleEn: "Statistics", noteEs: "Datos, probabilidad e inferencia", noteEn: "Data, probability and inference" },
+  { id: "linear", icon: "▦", titleEs: "Álgebra lineal", titleEn: "Linear algebra", noteEs: "Vectores, matrices y espacios", noteEn: "Vectors, matrices and spaces" },
+  { id: "discrete", icon: "∑", titleEs: "Discreta", titleEn: "Discrete math", noteEs: "Lógica, conteo y algoritmos", noteEn: "Logic, counting and algorithms" },
+  { id: "physics", icon: "↗", titleEs: "Matemática aplicada", titleEn: "Applied math", noteEs: "Modelos para ciencia y vida real", noteEn: "Models for science and real life" }
 ];
 
 function renderSubjectGrid() {
   const grid = $("#subjectGrid");
   if (!grid) return;
-  grid.innerHTML = UNIVERSAL_SUBJECTS.map(subject => `<button class="subject-card ${state.subject === subject.id ? "active" : ""}" data-subject="${subject.id}"><span class="subject-icon">${subject.icon}</span><strong>${subject.title}</strong><small>${subject.note}</small></button>`).join("");
-  $$("[data-subject]").forEach(button => { button.onclick = () => { state.subject = button.dataset.subject; localStorage.setItem("cureSubject", state.subject); renderSubjectGrid(); }; });
+  grid.innerHTML = UNIVERSAL_SUBJECTS.map(subject => `<button class="subject-card ${state.subject === subject.id ? "active" : ""}" data-subject="${subject.id}" aria-pressed="${state.subject === subject.id}"><span class="subject-icon">${subject.icon}</span><strong>${state.language === "en" ? subject.titleEn : subject.titleEs}</strong><small>${state.language === "en" ? subject.noteEn : subject.noteEs}</small></button>`).join("");
+  $$('[data-subject]').forEach(button => { button.onclick = () => { state.subject = button.dataset.subject; localStorage.setItem("cureSubject", state.subject); renderSubjectGrid(); updateCoachPanel(); showView("assistant"); addChat("assistant", state.language === "en" ? `Subject selected: ${button.textContent.trim()}. Ask me for a guided challenge.` : `Materia seleccionada: ${button.textContent.trim()}. Pídeme un reto guiado.`); }; });
 }
 
 function applyLanguage() {
@@ -179,6 +191,29 @@ function applyLanguage() {
   $("#chatInput").placeholder = copy.placeholder;
   const tabs = $$(".tab");
   [copy.practice, copy.sim, copy.tutor, copy.rules].forEach((label, index) => { if (tabs[index]) tabs[index].textContent = label; });
+  const labels = {
+    "#streakLabel": "streak", "#sessionLabel": "session", "#attemptsLabel": "attempts", "#correctLabel": "correct",
+    "#accuracyLabel": "accuracy", "#focusLabel": "focus", "#filterLabel": "filter", "#planLabel": "plan",
+    "#reviewLabel": "review", "#activeGuideLabel": "activeGuide", "#universeLabel": "universe",
+    "#levelLabel": "level", "#routeLabel": "route", "#tryIdeaLabel": "tryIdea", "#materialsTitle": "materials",
+    "#materialHelp": "materialHelp", "#chooseMaterials": "choose", "#rulesTitle": "syllabus",
+    "#cookieTitle": "cookieTitle", "#cookieBody": "cookieBody", "#acceptCookies": "cookieAccept", "#footerTagline": "footer"
+  };
+  Object.entries(labels).forEach(([selector, key]) => { const element = $(selector); if (element) element.textContent = t(key); });
+  const questionTitle = $("#practiceTitle"); if (questionTitle) questionTitle.textContent = state.language === "en" ? "Guided practice" : "Práctica guiada";
+  const questionEyebrow = $("#questionEyebrow"); if (questionEyebrow) questionEyebrow.textContent = state.language === "en" ? "QUESTION" : "PREGUNTA";
+  const simTitle = $("#simTitle"); if (simTitle) simTitle.textContent = state.language === "en" ? "Quick mock exam" : "Simulacro rápido";
+  const assistantTitle = $("#assistantTitle"); if (assistantTitle) assistantTitle.textContent = state.language === "en" ? "Your study desk" : "Tu mesa de estudio";
+  const level = $("#levelSelect"); if (level) [...level.options].forEach(option => { option.textContent = state.language === "en" ? ({ explore: "Explore", school: "School", college: "College", olympiad: "Advanced challenge" }[option.value]) : ({ explore: "Explorar", school: "Secundaria", college: "Universidad", olympiad: "Reto avanzado" }[option.value]); });
+  const filter = $("#topicFilter"); if (filter) [...filter.options].forEach(option => { option.textContent = option.value === "all" ? t("allTopics") : option.value === "chain" ? (state.language === "en" ? "Derivative rules" : "Reglas de derivación") : option.value === "implicit" ? (state.language === "en" ? "Implicit differentiation" : "Implícita") : (state.language === "en" ? "Tangents" : "Tangentes"); });
+  $$("[data-prompt]").forEach(button => { button.textContent = state.language === "en" ? (button.dataset.promptEn || button.dataset.prompt) : button.dataset.prompt; });
+  const topicLabels = state.language === "en" ? { all: "Smart mix", chain: "Chain rule & combined rules", implicit: "Implicit differentiation", tangent: "Tangent lines" } : { all: "Mezcla inteligente", chain: "Cadena y reglas combinadas", implicit: "Implícita", tangent: "Tangentes" };
+  $$(".topic").forEach(button => { const text = button.firstChild; if (text) text.textContent = `${topicLabels[button.dataset.topic]} `; });
+  renderSubjectGrid();
+  renderMaterials();
+  updateStats();
+  updateCoachPanel();
+  loadLearningPlan();
   localStorage.setItem("cureLanguage", state.language);
 }
 
@@ -218,7 +253,7 @@ async function analyzeVisionFile(file) {
   const reader = new FileReader();
   reader.onload = async () => {
     addChat("user", `📎 ${file.name}`);
-    const loading = addChat("assistant", "Analizando tu material…");
+    const loading = addChat("assistant", state.language === "en" ? "Reading your material…" : "Analizando tu material…");
     try {
       const response = await fetch("/api/vision/tutor", {
         method: "POST",
@@ -235,7 +270,7 @@ async function analyzeVisionFile(file) {
       const data = await response.json();
       loading.textContent = data.answer || data.error || "No pude analizar el material.";
     } catch (error) {
-      loading.textContent = "No pude conectar con el analizador visual. Puedes intentar de nuevo.";
+      loading.textContent = state.language === "en" ? "I could not connect to the vision tutor. Try again." : "No pude conectar con el analizador visual. Puedes intentar de nuevo.";
     }
   };
   reader.readAsDataURL(file);
@@ -244,7 +279,8 @@ async function analyzeVisionFile(file) {
 function renderMaterials() {
   const list = $("#materialList");
   if (!list) return;
-  list.innerHTML = state.materials.map(item => `<div class="material-item"><span>📎 ${item.name}</span><span>${Math.ceil(item.size / 1024)} KB</span></div>`).join("");
+  list.innerHTML = state.materials.map((item, index) => `<div class="material-item"><span>📎 ${item.name}</span><span>${Math.ceil(item.size / 1024)} KB <button type="button" data-remove-material="${index}" aria-label="Remove ${item.name}">×</button></span></div>`).join("");
+  $$("[data-remove-material]").forEach(button => { button.onclick = () => { state.materials.splice(Number(button.dataset.removeMaterial), 1); renderMaterials(); }; });
 }
 
 function setupMaterials() {
@@ -289,8 +325,8 @@ function updateCoachPanel() {
   const focusTopic = getWeakestTopic();
   const focusGuide = TOPIC_GUIDES[focusTopic] || TOPIC_GUIDES.all;
 
-  $("#studyGoal").textContent = `Siguiente foco: ${focusGuide.title}`;
-  $("#studyReason").textContent = focusGuide.focus;
+  $("#studyGoal").textContent = state.language === "en" ? `Next focus: ${guideTitle(focusTopic)}` : `Siguiente foco: ${guideTitle(focusTopic)}`;
+  $("#studyReason").textContent = guideFocus(focusTopic);
   $("#coachStrategy").textContent = focusGuide.strategy;
 
   const rows = ["chain", "implicit", "tangent"]
@@ -303,7 +339,7 @@ function updateCoachPanel() {
       return `
         <div class="progress-row ${active}">
           <div class="progress-label">
-            <span>${TOPIC_GUIDES[topic].title}</span>
+            <span>${guideTitle(topic)}</span>
             <b>${accuracy}%</b>
           </div>
           <div class="progress-track">
@@ -315,8 +351,8 @@ function updateCoachPanel() {
     .join("");
 
   $("#progressList").innerHTML = rows;
-  $("#topicOverview").textContent = `${guide.title}: ${guide.focus}`;
-  $("#learningReminder").textContent = `Tu foco actual está en ${focusGuide.title}. Intenta explicar el procedimiento en voz alta antes de responder.`;
+  $("#topicOverview").textContent = `${guideTitle(activeTopic)}: ${guideFocus(activeTopic)}`;
+  $("#learningReminder").textContent = state.language === "en" ? `Your current focus is ${guideTitle(focusTopic)}. Explain the steps aloud before answering.` : `Tu foco actual está en ${guideTitle(focusTopic)}. Intenta explicar el procedimiento en voz alta antes de responder.`;
 }
 
 async function getExercise(topic = state.topic) {
@@ -362,9 +398,9 @@ function renderQuestion() {
 
   $("#questionArea").innerHTML = `
     <div class="coach-tip">
-      <div class="eyebrow">Guía activa</div>
-      <h3>${activeGuide.title}</h3>
-      <p>${activeGuide.focus}</p>
+      <div class="eyebrow">${t("activeGuide")}</div>
+      <h3>${guideTitle(question.topic)}</h3>
+      <p>${guideFocus(question.topic)}</p>
       <small>${activeGuide.strategy}</small>
     </div>
 
@@ -378,20 +414,20 @@ function renderQuestion() {
     <div class="answer-row">
       <input
         id="answerInput"
-        placeholder="Escribe tu respuesta…"
+        placeholder="${state.language === "en" ? "Write your answer…" : "Escribe tu respuesta…"}"
         autocomplete="off"
       />
 
-      <button class="button primary" id="checkAnswer">Comprobar</button>
+      <button class="button primary" id="checkAnswer">${t("check")}</button>
     </div>
 
     <div class="actions">
-      <button class="button secondary" id="showHint">Pista</button>
-      <button class="button secondary" id="showSolution">Ver procedimiento</button>
+      <button class="button secondary" id="showHint">${t("hint")}</button>
+      <button class="button secondary" id="showSolution">${t("solution")}</button>
     </div>
 
     <div id="hint" class="hint hidden">
-      <b>Pista:</b> ${question.hint}
+      <b>${t("hint")}:</b> ${question.hint}
     </div>
 
     <div id="feedback"></div>
@@ -429,13 +465,13 @@ function checkAnswer() {
 
   if (!input.value.trim()) {
     feedback.className = "feedback bad";
-    feedback.textContent = "Escribe una respuesta primero.";
+    feedback.textContent = state.language === "en" ? "Write an answer first." : "Escribe una respuesta primero.";
     return;
   }
 
   if (state.question.answered) {
     feedback.className = "feedback bad";
-    feedback.textContent = "Esta pregunta ya fue calificada.";
+    feedback.textContent = state.language === "en" ? "This question has already been graded." : "Esta pregunta ya fue calificada.";
     return;
   }
 
@@ -451,13 +487,13 @@ function checkAnswer() {
     updateStudyStats(topic, true);
 
     feedback.className = "feedback good";
-    feedback.textContent = "¡Correcto! Revisa el procedimiento para consolidarlo.";
+    feedback.textContent = state.language === "en" ? "Correct! Review the steps to make it stick." : "¡Correcto! Revisa el procedimiento para consolidarlo.";
   } else {
     state.profile.streak = 0;
     updateStudyStats(topic, false);
 
     feedback.className = "feedback bad";
-    feedback.innerHTML = `Incorrecto. Respuesta esperada: <b>${state.question.answer}</b>`;
+    feedback.innerHTML = state.language === "en" ? `Not quite. Expected answer: <b>${state.question.answer}</b>` : `Incorrecto. Respuesta esperada: <b>${state.question.answer}</b>`;
     $("#solution").classList.remove("hidden");
   }
 
@@ -506,7 +542,7 @@ function gradeSim() {
 
   save();
 
-  $("#simResult").textContent = `Resultado: ${score}/8`;
+  $("#simResult").textContent = state.language === "en" ? `Result: ${score}/8` : `Resultado: ${score}/8`;
   $("#simResult").classList.remove("hidden");
 }
 
@@ -539,7 +575,7 @@ async function loadCurriculum() {
 
 async function loadLearningPlan() {
   try {
-    const response = await fetch("/api/learning-plan");
+    const response = await fetch(`/api/learning-plan?language=${state.language}`);
     const data = await response.json();
     const cards = data.focus
       .map(
@@ -570,6 +606,20 @@ async function checkAppUpdate() {
   }
 }
 
+async function loadAiStatus() {
+  try {
+    const response = await fetch("/api/ai/status");
+    const data = await response.json();
+    const status = $("#aiStatus");
+    if (!status) return;
+    status.textContent = data.provider === "openai-compatible"
+      ? (state.language === "en" ? "Cloud AI connected" : "IA en la nube conectada")
+      : (state.language === "en" ? "Guided tutor ready" : "Tutor guiado listo");
+  } catch {
+    // Keep the interface usable if the status endpoint is temporarily unavailable.
+  }
+}
+
 function addChat(role, text) {
   const item = document.createElement("div");
   item.className = `chat-message ${role}`;
@@ -584,7 +634,7 @@ function initChat() {
   if (!$("#chatMessages").children.length) {
     addChat(
       "assistant",
-      "Hola, soy cure.math AI. Puedo ayudarte con matemáticas paso a paso. Elige una materia o sube una foto del ejercicio para comenzar."
+      t("welcome")
     );
   }
 }
@@ -600,7 +650,7 @@ async function sendChat(event) {
   addChat("user", question);
   input.value = "";
 
-  const loading = addChat("assistant", "Pensando…");
+  const loading = addChat("assistant", t("thinking"));
   $("#chatSubmit").disabled = true;
 
   try {
@@ -681,10 +731,12 @@ $("#chatForm").onsubmit = sendChat;
 $("#languageToggle").onclick = () => {
   state.language = state.language === "es" ? "en" : "es";
   applyLanguage();
+  if (state.question) renderQuestion();
+  loadAiStatus();
 };
 
 $$('[data-prompt]').forEach(button => {
-  button.onclick = () => { $("#chatInput").value = button.dataset.prompt; $("#chatInput").focus(); };
+  button.onclick = () => { $("#chatInput").value = button.dataset.prompt; $("#chatForm").requestSubmit(); };
 });
 
 updateStats();
@@ -700,4 +752,5 @@ if ($("#levelSelect")) {
 initCookieBanner();
 loadLearningPlan();
 checkAppUpdate();
+loadAiStatus();
 newQuestion();
