@@ -17,13 +17,14 @@ const AI_BASE_URL = String(process.env.AI_BASE_URL || "").replace(/\/$/, "");
 const AI_API_KEY = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || "";
 const AI_MODEL = process.env.AI_MODEL || process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-const systemPrompt = `Eres cure.math AI, un tutor universal de matemáticas: claro, paciente, riguroso y socrático. Puedes ayudar con aritmética, álgebra, geometría, cálculo, estadística, probabilidad, álgebra lineal, matemática discreta y matemática aplicada. Adapta el nivel al estudiante. Da una pista antes de revelar una solución completa, comprueba supuestos y usa notación legible. Si el usuario adjunta materiales, trátalos como contexto de estudio y no inventes contenido que no puedas leer. Si una pregunta no es matemática, redirígela con amabilidad.`;
+const systemPrompt = `Eres cure.math AI, un tutor universal de matemáticas: claro, paciente, riguroso y socrático. Puedes ayudar con aritmética, álgebra, geometría, cálculo, estadística, probabilidad, álgebra lineal, matemática discreta y matemática aplicada. Adapta el nivel al estudiante. Da una pista antes de revelar una solución completa, comprueba supuestos y usa notación legible. Si el usuario adjunta materiales, trátalos como contexto de estudio y no inventes contenido que no puedas leer. Si una pregunta no es matemática, redirígela con amabilidad. RESTRICCIÓN PEDAGÓGICA GLOBAL: no utilices el número e ni la función ln en ejemplos, fórmulas, pistas o respuestas; si el material los contiene, explica la idea usando una alternativa permitida o marca esa parte como fuera del temario.`;
 const visionSystemPrompt = `${systemPrompt} Analiza la imagen o documento recibido, extrae con cuidado el enunciado matemático y enseña el procedimiento paso a paso. RESTRICCIÓN PEDAGÓGICA INMUTABLE: no uses el número e ni la función ln en ejemplos, fórmulas, pistas o respuestas. Si aparecen en el material, explica la idea con una alternativa permitida o indica que esa parte queda fuera del temario.`;
 const quotaStore = new Map();
 const FREE_LIMIT = 3;
 
 function quotaMiddleware(req, res, next) {
-  if (req.get("x-plan") === "premium") return next();
+  const demoPremium = process.env.NODE_ENV !== "production" && process.env.ALLOW_DEMO_PREMIUM === "true";
+  if (demoPremium && req.get("x-plan") === "premium") return next();
   const key = req.ip || req.socket.remoteAddress || "anonymous";
   const current = quotaStore.get(key) || { count: 0, resetAt: Date.now() + 24 * 60 * 60 * 1000 };
   if (Date.now() > current.resetAt) { current.count = 0; current.resetAt = Date.now() + 24 * 60 * 60 * 1000; }
@@ -52,6 +53,7 @@ async function chatRequest({ messages, model, images = [] }) {
     const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${AI_API_KEY}` },
+      signal: AbortSignal.timeout(30000),
       body: JSON.stringify({ model: model || config.model, messages, temperature: 0.2 })
     });
     return { response, parse: async data => data?.choices?.[0]?.message?.content };
@@ -61,9 +63,11 @@ async function chatRequest({ messages, model, images = [] }) {
     ...message,
     ...(message.images?.length ? { images: message.images } : {})
   }));
-  const response = await fetch("http://localhost:11434/api/chat", {
+  const ollamaUrl = String(process.env.OLLAMA_URL || "http://localhost:11434").replace(/\/$/, "");
+  const response = await fetch(`${ollamaUrl}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(30000),
     body: JSON.stringify({
       model: model || process.env.OLLAMA_MODEL || "llama3",
       stream: false,
@@ -109,7 +113,9 @@ function localTutorAnswer(question, topic = "all", subject = "calculus") {
   return `Pista guiada para ${subject}:\n\n${subjectHint}\n\nEscribe la expresión o el paso que te confunde y lo resolvemos juntos sin saltarnos el razonamiento.`;
 }
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : true;
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map(origin => origin.trim()).filter(Boolean)
+  : ["https://cure-math-ai.onrender.com", "http://localhost:3000"];
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json({ limit: "15mb" }));
 app.disable("x-powered-by");
@@ -133,7 +139,8 @@ app.get("/api/ai/status", (_req, res) => {
 app.get("/api/quota", (req, res) => {
   const key = req.ip || req.socket.remoteAddress || "anonymous";
   const current = quotaStore.get(key);
-  res.json({ plan: req.get("x-plan") === "premium" ? "premium" : "free", limit: FREE_LIMIT, used: current?.count || 0, remaining: Math.max(0, FREE_LIMIT - (current?.count || 0)) });
+  const demoPremium = process.env.NODE_ENV !== "production" && process.env.ALLOW_DEMO_PREMIUM === "true";
+  res.json({ plan: demoPremium && req.get("x-plan") === "premium" ? "premium" : "free", limit: FREE_LIMIT, used: current?.count || 0, remaining: Math.max(0, FREE_LIMIT - (current?.count || 0)) });
 });
 
 // Multimodal endpoint: accepts a base64 image buffer in JSON so the frontend can stream
@@ -176,7 +183,8 @@ app.get("/api/exercises/random", (req, res) => {
     // language instantly without losing the current exercise.
     return res.json({ ...exercise, answered: false });
   } catch (error) {
-    return res.status(500).json({ error: "No se pudo cargar el banco de ejercicios.", details: error.message });
+    console.warn("Exercise bank error:", error.message);
+    return res.status(500).json({ error: "No se pudo cargar el banco de ejercicios." });
   }
 });
 
@@ -221,7 +229,8 @@ app.get("/api/math-apps", (req, res) => {
       }))
     });
   } catch (error) {
-    return res.status(500).json({ error: "No se pudo leer el catálogo de apps matemáticas.", details: error.message });
+    console.warn("Math apps catalog error:", error.message);
+    return res.status(500).json({ error: "No se pudo leer el catálogo de apps matemáticas." });
   }
 });
 
@@ -239,12 +248,16 @@ app.post("/api/chat", quotaMiddleware, async (req, res) => {
     const subject = typeof req.body?.subject === "string" ? req.body.subject : "calculus";
     const level = typeof req.body?.level === "string" ? req.body.level : "explore";
     const materialContext = typeof req.body?.materialContext === "string" ? req.body.materialContext.slice(0, 16000) : "";
+    const priorConversation = Array.isArray(req.body?.conversation)
+      ? req.body.conversation.filter(message => ["user", "assistant"].includes(message?.role) && typeof message?.content === "string").slice(-8)
+      : [];
     const { response: ollamaResponse, parse } = await chatRequest({
       messages: [
         {
           role: "system",
           content: `${systemPrompt}\nCurso seleccionado: ${subject}. Nivel: ${level}. Currículo disponible como referencia: ${curriculum.allowedTopics.join(", ")}. Tema seleccionado: ${topic}. Responde en ${language}, con una pista primero y pasos cortos. No des por hecho la respuesta del estudiante.`
         },
+        ...priorConversation.slice(0, -1),
         { role: "user", content: materialContext ? `${question}\n\nMateriales disponibles:\n${materialContext}` : question }
       ]
     });

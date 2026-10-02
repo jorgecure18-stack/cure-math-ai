@@ -167,15 +167,15 @@
           </section>
 
           <section id="assistantView" class="view card hidden">
-            <span class="eyebrow">TUTOR CURRICULAR</span>
+            <span class="eyebrow" id="assistantEyebrow">TUTOR CURRICULAR</span>
             <h2 id="assistantTitle">Tu mesa de estudio</h2>
 
             <p class="muted" id="assistantDescription">Pregunta sobre los temas configurados.</p>
-            <div class="universe-bar"><div><span class="eyebrow">MATH UNIVERSE</span><strong id="universeLabel">Elige tu territorio</strong></div><label id="levelLabel" class="sr-only" for="levelSelect">Nivel</label><select id="levelSelect"><option value="explore">Explorar</option><option value="school">Secundaria</option><option value="college">Universidad</option><option value="olympiad">Reto avanzado</option></select></div>
+            <div class="universe-bar"><div><span class="eyebrow" id="universeEyebrow">MATH UNIVERSE</span><strong id="universeLabel">Elige tu territorio</strong></div><label id="levelLabel" class="sr-only" for="levelSelect">Nivel</label><select id="levelSelect"><option value="explore">Explorar</option><option value="school">Secundaria</option><option value="college">Universidad</option><option value="olympiad">Reto avanzado</option></select></div>
             <div id="subjectGrid" class="subject-grid"></div>
 
             <div class="coach-plan">
-              <div class="eyebrow">Ruta de aprendizaje</div>
+              <div class="eyebrow" id="routeHeading">Ruta de aprendizaje</div>
               <div id="learningPlan" class="mini-plan-list"></div>
               <p id="learningGeneral" class="muted"></p>
             </div>
@@ -202,7 +202,7 @@
                 </div>
               </div>
               <div class="material-dropzone" id="materialDropzone">
-                <input id="materialInput" type="file" multiple accept="image/png,image/jpeg,.pdf,.txt,.md,.docx,.pptx,.csv" hidden />
+                <input id="materialInput" type="file" multiple accept="image/png,image/jpeg,.pdf,.txt,.md,.csv" hidden />
                 <div class="upload-icon">↑</div>
                 <strong id="materialsTitle">Trae tus materiales aquí</strong>
                 <span id="materialHelp">PDF, apuntes o ejercicios · hasta 10 MB por archivo</span>
@@ -292,7 +292,7 @@
           </section>
 
           <section id="rulesView" class="view card hidden">
-            <span class="eyebrow">CONFIGURACIÓN CURRICULAR</span>
+            <span class="eyebrow" id="rulesEyebrow">CONFIGURACIÓN CURRICULAR</span>
             <h2 id="rulesTitle">Temario activo</h2>
             <div id="curriculumRules"></div>
           </section>
