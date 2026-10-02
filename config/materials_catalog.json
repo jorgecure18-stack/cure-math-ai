@@ -1,0 +1,52 @@
+{
+  "version": "1.0.0",
+  "course": "MATH 122",
+  "updatedAt": "2026-10-02",
+  "refreshPolicy": "read-on-request",
+  "items": [
+    {
+      "id": "math122-chapter-2-7",
+      "section": "2.7",
+      "titleEs": "Chapter 2.7",
+      "titleEn": "Chapter 2.7",
+      "descriptionEs": "Material base de la sección 2.7 para consultar y practicar con preguntas guiadas.",
+      "descriptionEn": "Core material for section 2.7 to consult and practice with guided questions.",
+      "fileUrl": "/materials/math122-chapter-2-7.pdf",
+      "topics": ["implicit"],
+      "practiceTopic": "implicit"
+    },
+    {
+      "id": "math122-chapter-2-8",
+      "section": "2.8",
+      "titleEs": "Chapter 2.8",
+      "titleEn": "Chapter 2.8",
+      "descriptionEs": "Material base de la sección 2.8 conectado a ejercicios interactivos de razones relacionadas.",
+      "descriptionEn": "Core material for section 2.8 connected to interactive related-rates practice.",
+      "fileUrl": "/materials/math122-chapter-2-8.pdf",
+      "topics": ["related"],
+      "practiceTopic": "related"
+    },
+    {
+      "id": "math122-chapter-3-1",
+      "section": "3.1",
+      "titleEs": "Chapter 3.1",
+      "titleEn": "Chapter 3.1",
+      "descriptionEs": "Material base de la sección 3.1 conectado a puntos críticos y extremos.",
+      "descriptionEn": "Core material for section 3.1 connected to critical numbers and extrema.",
+      "fileUrl": "/materials/math122-chapter-3-1.pdf",
+      "topics": ["extrema"],
+      "practiceTopic": "extrema"
+    },
+    {
+      "id": "math122-participation-6",
+      "section": "2.7–3.1",
+      "titleEs": "Math 122 · Participation 6",
+      "titleEn": "Math 122 · Participation 6",
+      "descriptionEs": "Hoja de participación para repasar el nuevo bloque y activar una práctica guiada.",
+      "descriptionEn": "Participation sheet for reviewing the new block and launching guided practice.",
+      "fileUrl": "/materials/math122-participation-6.pdf",
+      "topics": ["implicit", "related", "extrema"],
+      "practiceTopic": "all"
+    }
+  ]
+}

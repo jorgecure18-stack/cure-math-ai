@@ -13,6 +13,7 @@ const ROOT = path.resolve(__dirname, "..");
 const FRONTEND = path.join(ROOT, "frontend");
 const CURRICULUM_PATH = path.join(ROOT, "config", "curriculum_config.json");
 const MATH_APPS_PATH = path.join(ROOT, "config", "math_apps.json");
+const MATERIALS_PATH = path.join(ROOT, "config", "materials_catalog.json");
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -172,6 +173,10 @@ function readMathApps() {
   return JSON.parse(fs.readFileSync(MATH_APPS_PATH, "utf8"));
 }
 
+function readMaterials() {
+  return JSON.parse(fs.readFileSync(MATERIALS_PATH, "utf8"));
+}
+
 function localTutorAnswer(question, topic = "all", subject = "calculus", language = "es", action = "ask") {
   const lower = question.toLowerCase();
   const english = language === "English" || language === "en";
@@ -179,6 +184,8 @@ function localTutorAnswer(question, topic = "all", subject = "calculus", languag
     chain: english ? "Find the outer and inner functions. Differentiate the outer layer, keep the inner layer, and multiply by its derivative." : "Busca la función exterior e interior. Deriva la exterior conservando la interior y multiplica por la derivada de la interior.",
     implicit: english ? "Differentiate both sides with respect to x. Each term containing y contributes a factor y'. Then group the y' terms and isolate them." : "Deriva ambos lados respecto de x. Cada término que contenga y aporta un factor y'. Después agrupa y' y despeja.",
     tangent: english ? "Calculate y', evaluate it at the point to get the slope m, and use y-y₀=m(x-x₀)." : "Calcula y', evalúala en el punto para obtener la pendiente m y usa y-y₀=m(x-x₀).",
+    related: english ? "Write the relation between the changing quantities, differentiate with respect to time, and substitute the known values only at the end." : "Escribe la relación entre las cantidades que cambian, deriva respecto del tiempo y sustituye los valores conocidos solo al final.",
+    extrema: english ? "Find critical numbers from the derivative, then compare the function values at candidates and interval endpoints." : "Encuentra los números críticos con la derivada y compara los valores de la función en los candidatos y extremos del intervalo.",
     all: english ? "First identify the structure: composition, product, quotient, implicit equation, or tangent line. Then apply the matching rule step by step." : "Primero identifica la estructura: composición, producto, cociente, ecuación implícita o una recta tangente. Luego aplica la regla correspondiente paso a paso."
   }[topic] || "";
 
@@ -227,7 +234,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.get("/api/app-meta", (_req, res) => {
-  res.json({ name: "cure.math AI", version: "0.8.0", updatedAt: new Date().toISOString(), status: "ready", capabilities: ["vision", "dynamic-curriculum", "free-tier", "bilingual-ui", "installable-web-app", "katex", "worker-graph", "realtime-presence", "claude-stream"], ai: modelConfig().provider });
+  res.json({ name: "cure.math AI", version: "0.9.0", updatedAt: new Date().toISOString(), status: "ready", capabilities: ["vision", "dynamic-curriculum", "interactive-materials", "free-tier", "bilingual-ui", "installable-web-app", "katex", "worker-graph", "realtime-presence", "claude-stream"], ai: modelConfig().provider });
 });
 
 app.get("/api/ai/status", (_req, res) => {
@@ -442,6 +449,31 @@ app.get("/api/curriculum", (_req, res) => {
       return res.status(500).json({ error: "El archivo de curriculum no es válido JSON." });
     }
   });
+});
+
+app.get("/api/materials", (_req, res) => {
+  try {
+    const catalog = readMaterials();
+    const english = _req.query.language === "en";
+    return res.json({
+      course: catalog.course,
+      version: catalog.version,
+      updatedAt: catalog.updatedAt,
+      refreshPolicy: catalog.refreshPolicy,
+      items: catalog.items.map(item => ({
+        id: item.id,
+        section: item.section,
+        title: english ? item.titleEn : item.titleEs,
+        description: english ? item.descriptionEn : item.descriptionEs,
+        fileUrl: item.fileUrl,
+        topics: item.topics,
+        practiceTopic: item.practiceTopic
+      }))
+    });
+  } catch (error) {
+    console.warn("Materials catalog error:", error.message);
+    return res.status(500).json({ error: "No se pudo cargar el catálogo de materiales." });
+  }
 });
 
 app.get("/*", (_req, res) => {

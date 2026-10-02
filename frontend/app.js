@@ -21,6 +21,16 @@ const TOPIC_GUIDES = {
     title: "Rectas tangentes",
     focus: "La pendiente es la derivada evaluada en el punto dado.",
     strategy: "Usa la forma punto-pendiente y simplifica la ecuación final."
+  },
+  related: {
+    title: "Razones relacionadas",
+    focus: "Conecta cantidades que cambian con el tiempo antes de sustituir valores.",
+    strategy: "Escribe la relación geométrica, deriva respecto al tiempo y sustituye al final."
+  },
+  extrema: {
+    title: "Máximos y mínimos",
+    focus: "Busca puntos críticos y compara los valores que determinan el comportamiento de la función.",
+    strategy: "Calcula la derivada, encuentra candidatos y compara extremos del intervalo y puntos críticos."
   }
 };
 
@@ -45,6 +55,7 @@ const state = {
   subject: localStorage.getItem("cureSubject") || "calculus",
   level: localStorage.getItem("cureLevel") || "explore",
   materials: [],
+  selectedCurriculumMaterial: null,
   question: null,
   number: 0,
   sim: [],
@@ -58,7 +69,9 @@ const state = {
     all: [],
     chain: [],
     implicit: [],
-    tangent: []
+    tangent: [],
+    related: [],
+    extrema: []
   },
   profile: JSON.parse(
     localStorage.getItem("fedraProfileV2") ||
@@ -76,7 +89,9 @@ function getStoredStudyState() {
       all: { attempted: 0, correct: 0, streak: 0 },
       chain: { attempted: 0, correct: 0, streak: 0 },
       implicit: { attempted: 0, correct: 0, streak: 0 },
-      tangent: { attempted: 0, correct: 0, streak: 0 }
+      tangent: { attempted: 0, correct: 0, streak: 0 },
+      related: { attempted: 0, correct: 0, streak: 0 },
+      extrema: { attempted: 0, correct: 0, streak: 0 }
     },
     sessionCount: 0,
     lastFocus: "all"
@@ -237,14 +252,18 @@ const GUIDE_COPY = {
   all: { es: ["Mezcla inteligente", "Practica varios tipos de derivadas para reconocer cuándo usar cada regla."], en: ["Smart mix", "Practice several derivative types and learn when each rule applies."] },
   chain: { es: ["Regla de la cadena", "Busca la función exterior e interior antes de derivar."], en: ["Chain rule", "Find the outer and inner functions before differentiating."] },
   implicit: { es: ["Diferenciación implícita", "Cuando aparece y, trátala como función de x y multiplica por y'."], en: ["Implicit differentiation", "Treat y as a function of x and multiply its terms by y'."] },
-  tangent: { es: ["Rectas tangentes", "La pendiente es la derivada evaluada en el punto dado."], en: ["Tangent lines", "The slope is the derivative evaluated at the given point."] }
+  tangent: { es: ["Rectas tangentes", "La pendiente es la derivada evaluada en el punto dado."], en: ["Tangent lines", "The slope is the derivative evaluated at the given point."] },
+  related: { es: ["Razones relacionadas", "Conecta cantidades que cambian con el tiempo."], en: ["Related rates", "Connect quantities that change with time."] },
+  extrema: { es: ["Máximos y mínimos", "Compara puntos críticos y extremos del intervalo."], en: ["Maximum and minimum", "Compare critical numbers and interval endpoints."] }
 };
 
 const GUIDE_STRATEGY = {
   all: { es: "Observa el patrón general, identifica la estructura y luego deriva con la regla apropiada.", en: "Observe the pattern, identify the structure, then differentiate with the matching rule." },
   chain: { es: "Deriva la capa externa, conserva la interna y multiplica por la derivada de la interna.", en: "Differentiate the outer layer, keep the inner layer, and multiply by its derivative." },
   implicit: { es: "Agrupa términos con y' y resuélvelos al final.", en: "Group the y' terms and isolate them at the end." },
-  tangent: { es: "Usa la forma punto-pendiente y simplifica la ecuación final.", en: "Use point-slope form and simplify the final equation." }
+  tangent: { es: "Usa la forma punto-pendiente y simplifica la ecuación final.", en: "Use point-slope form and simplify the final equation." },
+  related: { es: "Escribe la relación, deriva respecto al tiempo y sustituye al final.", en: "Write the relation, differentiate with respect to time, then substitute." },
+  extrema: { es: "Calcula la derivada, encuentra candidatos y compara sus valores.", en: "Differentiate, find candidates, and compare their values." }
 };
 
 function guideTitle(topic) { return GUIDE_COPY[topic]?.[state.language]?.[0] || TOPIC_GUIDES[topic]?.title || topic; }
@@ -319,12 +338,13 @@ function applyLanguage() {
   const canvas = $("#graphCanvas"); if (canvas) canvas.setAttribute("aria-label", toolText("graphLabel"));
   calculatorTool?.setLanguage(state.language); graphTool?.setLanguage(state.language);
   const level = $("#levelSelect"); if (level) [...level.options].forEach(option => { option.textContent = state.language === "en" ? ({ explore: "Explore", school: "School", college: "College", olympiad: "Advanced challenge" }[option.value]) : ({ explore: "Explorar", school: "Secundaria", college: "Universidad", olympiad: "Reto avanzado" }[option.value]); });
-  const filter = $("#topicFilter"); if (filter) [...filter.options].forEach(option => { option.textContent = option.value === "all" ? t("allTopics") : option.value === "chain" ? (state.language === "en" ? "Derivative rules" : "Reglas de derivación") : option.value === "implicit" ? (state.language === "en" ? "Implicit differentiation" : "Implícita") : (state.language === "en" ? "Tangents" : "Tangentes"); });
+  const filter = $("#topicFilter"); if (filter) [...filter.options].forEach(option => { option.textContent = option.value === "all" ? t("allTopics") : option.value === "chain" ? (state.language === "en" ? "Derivative rules" : "Reglas de derivación") : option.value === "implicit" ? (state.language === "en" ? "Implicit differentiation" : "Implícita") : option.value === "tangent" ? (state.language === "en" ? "Tangents" : "Tangentes") : option.value === "related" ? (state.language === "en" ? "Related rates" : "Razones relacionadas") : (state.language === "en" ? "Maximum and minimum" : "Máximos y mínimos"); });
   $$("[data-prompt]").forEach(button => { button.textContent = state.language === "en" ? (button.dataset.promptEn || button.dataset.prompt) : button.dataset.prompt; });
-  const topicLabels = state.language === "en" ? { all: "Smart mix", chain: "Chain rule & combined rules", implicit: "Implicit differentiation", tangent: "Tangent lines" } : { all: "Mezcla inteligente", chain: "Cadena y reglas combinadas", implicit: "Implícita", tangent: "Tangentes" };
+  const topicLabels = state.language === "en" ? { all: "Smart mix", chain: "Chain rule & combined rules", implicit: "Implicit differentiation", tangent: "Tangent lines", related: "Related rates", extrema: "Maximum and minimum" } : { all: "Mezcla inteligente", chain: "Cadena y reglas combinadas", implicit: "Implícita", tangent: "Tangentes", related: "Razones relacionadas", extrema: "Máximos y mínimos" };
   $$(".topic").forEach(button => { const text = button.firstChild; if (text) text.textContent = `${topicLabels[button.dataset.topic]} `; });
   renderSubjectGrid();
   renderMaterials();
+  loadCurriculumMaterials();
   const appsEyebrow = $("#appsEyebrow"); if (appsEyebrow) appsEyebrow.textContent = appText("eyebrow");
   const appsTitle = $("#recommendedAppsTitle"); if (appsTitle) appsTitle.textContent = appText("title");
   const appsIntro = $("#appsIntro"); if (appsIntro) appsIntro.textContent = appText("intro");
@@ -445,6 +465,45 @@ function renderMaterials() {
   $$("[data-remove-material]").forEach(button => { button.onclick = () => { state.materials.splice(Number(button.dataset.removeMaterial), 1); renderMaterials(); }; });
 }
 
+async function loadCurriculumMaterials() {
+  const library = $("#curriculumMaterials");
+  if (!library) return;
+  library.innerHTML = `<p class="muted">${state.language === "en" ? "Loading study materials…" : "Cargando materiales de estudio…"}</p>`;
+  try {
+    const response = await fetch(`/api/materials?language=${state.language}`);
+    if (!response.ok) throw new Error("materials unavailable");
+    const data = await response.json();
+    library.innerHTML = (data.items || []).map(item => `
+      <article class="material-card">
+        <div class="material-card-head">
+          <div><span class="material-section">${escapeHtml(item.section)}</span><h4>${escapeHtml(item.title)}</h4></div>
+          <span aria-hidden="true">📘</span>
+        </div>
+        <p>${escapeHtml(item.description)}</p>
+        <div class="material-card-actions">
+          <a class="button secondary" href="${escapeHtml(item.fileUrl)}" target="_blank" rel="noopener noreferrer">${state.language === "en" ? "Open PDF" : "Abrir PDF"}</a>
+          <button class="button primary" type="button" data-material-id="${escapeHtml(item.id)}" data-material-topic="${escapeHtml(item.practiceTopic)}">${state.language === "en" ? "Practice this" : "Practicar este tema"}</button>
+        </div>
+      </article>
+    `).join("") || `<p class="muted">${state.language === "en" ? "No curriculum materials yet." : "Aún no hay materiales curriculares."}</p>`;
+    const updated = $("#materialsUpdated");
+    if (updated) updated.textContent = `${state.language === "en" ? "Updated" : "Actualizado"}: ${escapeHtml(data.updatedAt || "")}`;
+    $$('[data-material-topic]').forEach(button => {
+      button.onclick = () => {
+        state.selectedCurriculumMaterial = data.items.find(item => item.id === button.dataset.materialId) || null;
+        state.topic = button.dataset.materialTopic || "all";
+        const filter = $("#topicFilter");
+        if (filter) filter.value = state.topic;
+        $$(".topic").forEach(item => item.classList.toggle("selected", item.dataset.topic === state.topic));
+        showView("practice");
+        newQuestion();
+      };
+    });
+  } catch {
+    library.innerHTML = `<p class="muted">${state.language === "en" ? "The material library is temporarily unavailable." : "La biblioteca de materiales no está disponible temporalmente."}</p>`;
+  }
+}
+
 function setupMaterials() {
   const input = $("#materialInput");
   const dropzone = $("#materialDropzone");
@@ -479,7 +538,7 @@ function getTopicAccuracy(topic) {
 }
 
 function getWeakestTopic() {
-  const topics = ["chain", "implicit", "tangent"];
+  const topics = ["chain", "implicit", "tangent", "related", "extrema"];
   const ranked = topics
     .map(topic => ({
       topic,
@@ -506,7 +565,7 @@ function updateCoachPanel() {
   $("#studyReason").textContent = guideFocus(focusTopic);
   $("#coachStrategy").textContent = guideStrategy(focusTopic);
 
-  const rows = ["chain", "implicit", "tangent"]
+  const rows = ["chain", "implicit", "tangent", "related", "extrema"]
     .map(topic => {
       const stats = state.study.topicStats[topic] || { attempted: 0, correct: 0 };
       const accuracy = stats.attempted ? Math.round((stats.correct / stats.attempted) * 100) : 0;
@@ -590,6 +649,7 @@ function renderQuestion() {
     <div class="question-meta">
       <span class="pill">${question.tag}</span>
       <span class="pill">${question.topic}</span>
+      ${question.section ? `<span class="pill">MATH 122 · ${escapeHtml(question.section)}</span>` : ""}
     </div>
 
     <div class="question">${question.question}</div>
@@ -960,7 +1020,12 @@ async function sendChat(event) {
         action: state.chatAction,
         deviceId: state.deviceId,
         conversation: state.chatHistory.slice(-8),
-        materialContext: state.materials.map(item => `${item.name}\n${item.text || "(archivo adjunto; usa su nombre como referencia)"}`).join("\n\n").slice(0, 16000)
+        materialContext: [
+          state.selectedCurriculumMaterial
+            ? `${state.selectedCurriculumMaterial.title} · ${state.selectedCurriculumMaterial.section}\n${state.selectedCurriculumMaterial.description}`
+            : "",
+          ...state.materials.map(item => `${item.name}\n${item.text || "(archivo adjunto; usa su nombre como referencia)"}`)
+        ].filter(Boolean).join("\n\n").slice(0, 16000)
       })
     });
 

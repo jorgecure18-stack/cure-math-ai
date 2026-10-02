@@ -734,6 +734,15 @@ body { background: radial-gradient(circle at 10% 0%, #fffdf7 0, transparent 35%)
 .upload-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; background: var(--teal-soft); color: var(--teal); font-size: 22px; font-weight: 900; }
 .material-list { width: 100%; display: grid; gap: 4px; }
 .material-item { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--blue-note); }
+.curriculum-materials { width: 100%; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); text-align: left; }
+.material-library { display: grid; gap: 10px; margin-top: 12px; }
+.material-card { display: grid; gap: 8px; padding: 13px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 8px 18px rgba(26,54,77,.05); }
+.material-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.material-card h4 { margin: 0; color: var(--ink); }
+.material-section { color: var(--teal); font: 800 11px ui-monospace, monospace; letter-spacing: .06em; }
+.material-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.material-card-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.material-card-actions .button { text-decoration: none; }
 .chat-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .footer { max-width: 1240px; margin: 0 auto; padding: 18px 22px 30px; display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 11px; }
 .cookie-banner { position: fixed; z-index: 20; left: 18px; right: 18px; bottom: 18px; display: flex; justify-content: space-between; align-items: center; gap: 18px; max-width: 650px; margin: auto; padding: 15px 17px; border: 1px solid var(--line); border-radius: 17px; background: rgba(255,255,255,.96); box-shadow: 0 20px 55px rgba(17,42,67,.2); }
