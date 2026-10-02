@@ -77,7 +77,30 @@ function factorial(value) {
 }
 function formatValue(value) { return Number(value.toPrecision(12)).toString(); }
 
+function evaluateWithMathJs(input, variables, angleMode) {
+  const mathLib = globalThis.math;
+  if (!mathLib?.evaluate) return null;
+  const toRadians = value => angleMode === "deg" ? value * Math.PI / 180 : value;
+  const fromRadians = value => angleMode === "deg" ? value * 180 / Math.PI : value;
+  const scope = {
+    x: Number(variables.x ?? 0), pi: Math.PI, e: Math.E,
+    sin: value => Math.sin(toRadians(value)), cos: value => Math.cos(toRadians(value)), tan: value => Math.tan(toRadians(value)),
+    asin: value => fromRadians(Math.asin(value)), acos: value => fromRadians(Math.acos(value)), atan: value => fromRadians(Math.atan(value)),
+    sqrt: Math.sqrt, abs: Math.abs, floor: Math.floor, ceil: Math.ceil, round: Math.round,
+    exp: Math.exp, log: Math.log10
+  };
+  try {
+    const evaluated = mathLib.evaluate(String(input || ""), scope);
+    const value = typeof evaluated?.toNumber === "function" ? evaluated.toNumber() : evaluated;
+    return typeof value === "number" && Number.isFinite(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 export function evaluateExpression(input, variables = {}, angleMode = "rad") {
+  const mathJsResult = evaluateWithMathJs(input, variables, angleMode);
+  if (mathJsResult !== null) return mathJsResult;
   const values = [];
   for (const token of toRpn(input)) {
     if (token.type === "number") values.push(token.value);

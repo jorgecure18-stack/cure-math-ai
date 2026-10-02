@@ -889,9 +889,11 @@ async function sendChat(event) {
 
     loading.textContent = data.answer;
     state.chatHistory.push({ role: "assistant", content: data.answer || "" });
+    renderMath();
 
     if (data.mode === "fallback") {
       loading.textContent = `${data.answer}\n\n[Guía local activa: ${data.notice}]`;
+      renderMath();
     }
     state.chatAction = "ask";
   } catch (error) {
