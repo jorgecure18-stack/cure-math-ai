@@ -1,4 +1,4 @@
-export function createSlidingLimiter({ limit, windowMs, cleanupMs = windowMs }) {
+function buildLimiter({ limit, windowMs, cleanupMs = windowMs }) {
   const buckets = new Map();
   const cleanup = setInterval(() => {
     const cutoff = Date.now() - windowMs;
@@ -25,5 +25,32 @@ export function createSlidingLimiter({ limit, windowMs, cleanupMs = windowMs }) 
       clearInterval(cleanup);
       buckets.clear();
     }
+  };
+}
+
+export const createSlidingLimiter = options => buildLimiter(options);
+export function crearLimitador(max, ventanaMs, ahora = () => Date.now()) {
+  const registros = new Map();
+  return {
+    intentar(clave) {
+      const ahoraMs = ahora();
+      const vigentes = (registros.get(clave) || []).filter(timestamp => ahoraMs - timestamp < ventanaMs);
+      if (vigentes.length >= max) {
+        registros.set(clave, vigentes);
+        return { ok: false, reintentarEn: Math.max(1, Math.ceil((vigentes[0] + ventanaMs - ahoraMs) / 1000)) };
+      }
+      vigentes.push(ahoraMs);
+      registros.set(clave, vigentes);
+      return { ok: true, reintentarEn: 0 };
+    },
+    limpiar() {
+      const ahoraMs = ahora();
+      for (const [clave, timestamps] of registros) {
+        const vigentes = timestamps.filter(timestamp => ahoraMs - timestamp < ventanaMs);
+        if (vigentes.length) registros.set(clave, vigentes);
+        else registros.delete(clave);
+      }
+    },
+    get tamano() { return registros.size; }
   };
 }

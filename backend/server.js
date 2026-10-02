@@ -298,10 +298,14 @@ app.get("/api/math-apps", (req, res) => {
 
 async function handleTutorRequest(req, res) {
   try {
-    const question = typeof req.body?.question === "string" ? req.body.question.trim() : "";
+    const rawQuestion = typeof req.body?.mensaje === "string" ? req.body.mensaje : req.body?.question;
+    const question = typeof rawQuestion === "string" ? rawQuestion.trim() : "";
 
     if (!question) {
       return res.status(400).json({ error: "La pregunta es obligatoria." });
+    }
+    if (question.length > 1500) {
+      return res.status(400).json({ error: "La pregunta no puede superar 1500 caracteres." });
     }
 
     const curriculum = readCurriculum();
@@ -309,11 +313,20 @@ async function handleTutorRequest(req, res) {
     const language = req.body?.language === "en" ? "English" : "Spanish";
     const subject = typeof req.body?.subject === "string" ? req.body.subject : "calculus";
     const level = typeof req.body?.level === "string" ? req.body.level : "explore";
-    const action = ["hint", "question", "review", "ask"].includes(req.body?.action) ? req.body.action : "ask";
+    const action = ["hint", "question", "review", "ask"].includes(req.body?.action)
+      ? req.body.action
+      : req.body?.nivelPista === 1 ? "hint" : req.body?.nivelPista === 2 ? "question" : req.body?.nivelPista === 3 ? "review" : "ask";
     const materialContext = typeof req.body?.materialContext === "string" ? req.body.materialContext.slice(0, 16000) : "";
-    const priorConversation = Array.isArray(req.body?.conversation)
-      ? req.body.conversation.filter(message => ["user", "assistant"].includes(message?.role) && typeof message?.content === "string").slice(-8)
-      : [];
+    const historyInput = Array.isArray(req.body?.conversation)
+      ? req.body.conversation
+      : Array.isArray(req.body?.historial)
+        ? req.body.historial.map(message => ({ role: message?.rol, content: message?.contenido }))
+        : [];
+    const priorConversation = historyInput
+      .filter(message => ["user", "assistant"].includes(message?.role) && typeof message?.content === "string")
+      .map(message => ({ role: message.role, content: message.content.trim().slice(0, 1500) }))
+      .filter(message => message.content)
+      .slice(-8);
     const { response: ollamaResponse, parse } = await chatRequest({
       messages: [
         {

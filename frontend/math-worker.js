@@ -1,33 +1,47 @@
-/*
- * Evaluates graph samples away from the UI thread.
- * math.js is loaded inside the worker because workers do not share window.
- */
-importScripts("https://cdn.jsdelivr.net/npm/mathjs@14.0.1/lib/browser/math.js");
+// Web Worker de matemáticas. Mantiene el hilo de la interfaz libre.
+import { compilar, evaluarRPN, formatear } from "./math-evaluator.js";
 
-self.onmessage = event => {
-  const { requestId, expression, min, max, count } = event.data || {};
+const cache = new Map();
+function obtenerRPN(expression) {
+  if (!cache.has(expression)) {
+    if (cache.size >= 20) cache.delete(cache.keys().next().value);
+    cache.set(expression, compilar(expression));
+  }
+  return cache.get(expression);
+}
+
+self.onmessage = ({ data }) => {
+  const { id, accion } = data || {};
   try {
-    const compiled = math.compile(expression);
-    const points = [];
-    let finitePoints = 0;
-
-    for (let index = 0; index <= count; index += 1) {
-      const x = min + (index / count) * (max - min);
-      let y = null;
-      try {
-        const value = compiled.evaluate({ x });
-        if (typeof value === "number" && Number.isFinite(value) && Math.abs(value) < 1e8) {
-          y = value;
-          finitePoints += 1;
-        }
-      } catch {
-        // A discontinuity is represented as a gap in the chart.
-      }
-      points.push({ x, y });
+    if (accion === "evaluate") {
+      const rpn = obtenerRPN(data.expresion);
+      if (rpn.some(token => token.type === "variable")) throw new Error("La variable x no está definida en la calculadora.");
+      self.postMessage({ id, ok: true, resultado: formatear(evaluarRPN(rpn, Number.NaN, data.modoAngulo)) });
+      return;
     }
-
-    self.postMessage({ requestId, success: finitePoints >= 2, points });
+    if (accion === "generatePoints") {
+      const desde = Number(data.desde);
+      const hasta = Number(data.hasta);
+      if (!Number.isFinite(desde) || !Number.isFinite(hasta) || desde >= hasta) throw new Error("El rango Desde/Hasta no es válido.");
+      const count = Math.min(4000, Math.max(2, Math.floor(data.pasos) || 400));
+      const rpn = obtenerRPN(data.expresion);
+      const points = new Float64Array(count * 2);
+      const step = (hasta - desde) / (count - 1);
+      let finite = 0;
+      for (let index = 0; index < count; index += 1) {
+        const x = desde + index * step;
+        let y = Number.NaN;
+        try { y = evaluarRPN(rpn, x, data.modoAngulo || "rad"); } catch { /* discontinuidad */ }
+        points[index * 2] = x;
+        points[index * 2 + 1] = y;
+        if (Number.isFinite(y)) finite += 1;
+      }
+      if (finite < 2) throw new Error("No pude evaluar la función en el rango indicado.");
+      self.postMessage({ id, ok: true, puntos: points }, [points.buffer]);
+      return;
+    }
+    throw new Error("Acción desconocida.");
   } catch (error) {
-    self.postMessage({ requestId, success: false, error: error.message });
+    self.postMessage({ id, ok: false, error: error?.message || "Error matemático." });
   }
 };

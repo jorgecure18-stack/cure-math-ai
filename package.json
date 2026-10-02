@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node --env-file=.env backend/server.js",
     "dev": "node --env-file=.env --watch backend/server.js",
-    "test": "node --test frontend/math-tools.test.js backend/tests/*.test.js"
+    "test": "node --test frontend/math-tools.test.js frontend/math-evaluator.test.js backend/tests/*.test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

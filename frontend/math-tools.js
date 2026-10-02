@@ -1,3 +1,5 @@
+import { evaluar as evaluarSeguro } from "./math-evaluator.js";
+
 const FUNCTIONS = {
   sin: Math.sin, cos: Math.cos, tan: Math.tan,
   asin: Math.asin, acos: Math.acos, atan: Math.atan,
@@ -100,6 +102,11 @@ function evaluateWithMathJs(input, variables, angleMode) {
 }
 
 export function evaluateExpression(input, variables = {}, angleMode = "rad") {
+  try {
+    return evaluarSeguro(input, variables.x ?? Number.NaN, angleMode);
+  } catch {
+    // Mantiene compatibilidad con factoriales y operadores históricos de la app.
+  }
   const mathJsResult = evaluateWithMathJs(input, variables, angleMode);
   if (mathJsResult !== null) return mathJsResult;
   const values = [];

@@ -42,7 +42,7 @@ export function initGraph({ language = "es" } = {}) {
   const message = root.querySelector("#graphMessage");
   const copy = () => GRAPH_COPY[currentLanguage] || GRAPH_COPY.es;
   const ChartClass = globalThis.Chart;
-  const worker = typeof Worker === "function" ? new Worker("/math-worker.js") : null;
+  const worker = typeof Worker === "function" ? new Worker("/math-worker.js", { type: "module" }) : null;
   let workerSequence = 0;
   let drawSequence = 0;
 
@@ -79,11 +79,14 @@ export function initGraph({ language = "es" } = {}) {
     const requestId = ++workerSequence;
     let timeoutId;
     const handleMessage = event => {
-      if (event.data?.requestId !== requestId) return;
+      if (event.data?.id !== requestId) return;
       worker.removeEventListener("message", handleMessage);
       clearTimeout(timeoutId);
-      if (!event.data.success) return reject(new Error(copy().invalidFunction));
-      resolve(event.data.points);
+      if (!event.data.ok) return reject(new Error(event.data.error || copy().invalidFunction));
+      const values = event.data.puntos;
+      const points = [];
+      for (let index = 0; index < values.length; index += 2) points.push({ x: values[index], y: values[index + 1] });
+      resolve(points);
     };
     worker.addEventListener("message", handleMessage);
     timeoutId = setTimeout(() => {
@@ -91,11 +94,12 @@ export function initGraph({ language = "es" } = {}) {
       reject(new Error("worker-timeout"));
     }, 4000);
     worker.postMessage({
-      requestId,
-      expression: raw,
-      min: bounds.min,
-      max: bounds.max,
-      count: Math.min(900, Math.max(320, Math.round((bounds.max - bounds.min) * 28)))
+      id: requestId,
+      accion: "generatePoints",
+      expresion: raw,
+      desde: bounds.min,
+      hasta: bounds.max,
+      pasos: Math.min(4000, Math.max(320, Math.round((bounds.max - bounds.min) * 28)))
     });
   });
 
