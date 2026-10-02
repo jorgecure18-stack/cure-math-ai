@@ -1,0 +1,5 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdn.socket.io https://cdnjs.cloudflare.com; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob:; worker-src 'self' blob:; connect-src 'self' https://api.openai.com https://router.huggingface.co wss://cure-math-ai.onrender.com https://cure-math-ai.onrender.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'

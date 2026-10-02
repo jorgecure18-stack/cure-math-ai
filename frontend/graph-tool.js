@@ -42,6 +42,9 @@ export function initGraph({ language = "es" } = {}) {
   const message = root.querySelector("#graphMessage");
   const copy = () => GRAPH_COPY[currentLanguage] || GRAPH_COPY.es;
   const ChartClass = globalThis.Chart;
+  const worker = typeof Worker === "function" ? new Worker("/math-worker.js") : null;
+  let workerSequence = 0;
+  let drawSequence = 0;
 
   const readRange = () => {
     const min = Number(minInput.value);
@@ -51,7 +54,7 @@ export function initGraph({ language = "es" } = {}) {
     return bounds;
   };
 
-  const makePoints = raw => {
+  const makePointsOnMainThread = raw => {
     const count = Math.min(900, Math.max(320, Math.round((bounds.max - bounds.min) * 28)));
     const points = [];
     let finitePoints = 0;
@@ -70,6 +73,31 @@ export function initGraph({ language = "es" } = {}) {
     if (finitePoints < 2) throw new Error(copy().invalidFunction);
     return points;
   };
+
+  const makePointsInWorker = raw => new Promise((resolve, reject) => {
+    if (!worker) return reject(new Error("worker-unavailable"));
+    const requestId = ++workerSequence;
+    let timeoutId;
+    const handleMessage = event => {
+      if (event.data?.requestId !== requestId) return;
+      worker.removeEventListener("message", handleMessage);
+      clearTimeout(timeoutId);
+      if (!event.data.success) return reject(new Error(copy().invalidFunction));
+      resolve(event.data.points);
+    };
+    worker.addEventListener("message", handleMessage);
+    timeoutId = setTimeout(() => {
+      worker.removeEventListener("message", handleMessage);
+      reject(new Error("worker-timeout"));
+    }, 4000);
+    worker.postMessage({
+      requestId,
+      expression: raw,
+      min: bounds.min,
+      max: bounds.max,
+      count: Math.min(900, Math.max(320, Math.round((bounds.max - bounds.min) * 28)))
+    });
+  });
 
   const drawWithChart = (raw, points) => {
     if (!ChartClass) return false;
@@ -142,13 +170,20 @@ export function initGraph({ language = "es" } = {}) {
     context.fillText(`y = ${raw}`, 12, 20);
   };
 
-  const draw = () => {
+  const draw = async () => {
+    const sequence = ++drawSequence;
     const raw = expression.value.trim();
     message.textContent = "";
     if (!raw) { description.textContent = ""; message.textContent = copy().empty; if (chart) { chart.destroy(); chart = null; } return; }
     try {
       readRange();
-      const points = makePoints(raw);
+      let points;
+      try {
+        points = await makePointsInWorker(raw);
+      } catch {
+        points = makePointsOnMainThread(raw);
+      }
+      if (sequence !== drawSequence) return;
       if (!drawWithChart(raw, points)) drawFallback(raw, points);
       description.textContent = `${copy().showing} y = ${raw} · ${bounds.min} ≤ x ≤ ${bounds.max}`;
     } catch (error) {

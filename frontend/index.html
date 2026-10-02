@@ -10,18 +10,14 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>cure.math AI · Cálculo 1</title>
     <link rel="stylesheet" href="/styles.css" />
-    <script>
-      window.MathJax = {
-        tex: {
-          inlineMath: [["$", "$"], ["\\(", "\\)"]],
-          displayMath: [["$$", "$$"], ["\\[", "\\]"]]
-        }
-      };
-    </script>
+    <!-- KaTeX renders formulas like an exam sheet, including matrices and integrals. -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.7/dist/katex.min.css" integrity="sha384-JctiRyLzXCrSoOOzRnhyeBmzB6ZWtcjccUyc8lCQJqIbs3uQX" crossorigin="anonymous" />
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.18.7/dist/katex.min.js" integrity="sha384-+7Keh381hSkXmXqnjC0JBM/kzsN6TFj+wMKychSLjTvJ8/0ElMde2uKl8i6p6Buj" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.18.7/dist/contrib/auto-render.min.js" integrity="sha384-bjyGPfbij8/NDKJhSGZNP/khQVgtHUE5exjm4Ydllo42FwIgYsdLO2lXGmRBf5Mz" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjs@14.0.1/lib/browser/math.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <!-- Chart.js adds responsive axes/tooltips; the app keeps a native fallback if the CDN is unavailable. -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   </head>
   <body>
     <main class="shell">
@@ -35,6 +31,7 @@
 
         <div class="top-actions">
           <span class="status-pill"><i></i><span id="aiStatus">Tutor local listo</span></span>
+          <span class="presence-pill" aria-live="polite"><i class="presence-dot"></i><span id="onlineCount">Universitarios en línea: 0</span></span>
           <button class="language-toggle" id="languageToggle" type="button">EN</button>
           <div class="streak">
             <span id="streakLabel">Racha</span> <strong id="streak">0</strong>
@@ -66,13 +63,13 @@
         <div class="update-note"><span class="live-dot"></span><span id="updateNote">Contenido sincronizado hoy</span></div>
       </section>
 
-      <nav class="tabs" aria-label="Secciones">
-        <button class="tab active" data-view="practice">Práctica</button>
-        <button class="tab" data-view="sim">Simulacro</button>
-        <button class="tab" data-view="assistant">Tutor IA</button>
-        <button class="tab" data-view="rules">Currículo</button>
-        <button class="tab" data-view="calculator">Calculadora</button>
-        <button class="tab" data-view="graph">Gráfica</button>
+      <nav class="tabs" aria-label="Secciones" role="tablist">
+        <button class="tab active" id="tab-practice" role="tab" aria-controls="practiceView" aria-selected="true" tabindex="0" data-view="practice">Práctica</button>
+        <button class="tab" id="tab-sim" role="tab" aria-controls="simView" aria-selected="false" tabindex="-1" data-view="sim">Simulacro</button>
+        <button class="tab" id="tab-assistant" role="tab" aria-controls="assistantView" aria-selected="false" tabindex="-1" data-view="assistant">Tutor IA</button>
+        <button class="tab" id="tab-rules" role="tab" aria-controls="rulesView" aria-selected="false" tabindex="-1" data-view="rules">Currículo</button>
+        <button class="tab" id="tab-calculator" role="tab" aria-controls="calculatorView" aria-selected="false" tabindex="-1" data-view="calculator">Calculadora</button>
+        <button class="tab" id="tab-graph" role="tab" aria-controls="graphView" aria-selected="false" tabindex="-1" data-view="graph">Gráfica</button>
       </nav>
 
       <div class="layout">
@@ -128,7 +125,7 @@
         </aside>
 
         <section class="content">
-          <section id="practiceView" class="view card">
+          <section id="practiceView" class="view card" role="tabpanel" aria-labelledby="tab-practice" tabindex="0">
             <div class="section-head">
               <div>
                 <span class="eyebrow"><span id="questionEyebrow">PREGUNTA</span> <span id="number">1</span></span>
@@ -158,7 +155,7 @@
             <div id="questionArea"></div>
           </section>
 
-          <section id="simView" class="view card hidden">
+          <section id="simView" class="view card hidden" role="tabpanel" aria-labelledby="tab-sim" tabindex="0" hidden>
             <div class="section-head">
               <div>
                 <span class="eyebrow" id="simEyebrow">8 PREGUNTAS</span>
@@ -177,7 +174,7 @@
             <div id="simResult" class="result hidden"></div>
           </section>
 
-          <section id="assistantView" class="view card hidden">
+          <section id="assistantView" class="view card hidden" role="tabpanel" aria-labelledby="tab-assistant" tabindex="0" hidden>
             <span class="eyebrow" id="assistantEyebrow">TUTOR CURRICULAR</span>
             <h2 id="assistantTitle">Tu mesa de estudio</h2>
 
@@ -222,7 +219,7 @@
               </div>
             </div>
 
-            <div id="chatMessages" class="chat-messages"></div>
+            <div id="chatMessages" class="chat-messages" aria-live="polite" aria-atomic="false"></div>
 
             <form id="chatForm">
               <label class="sr-only" for="chatInput">Pregunta al tutor</label>
@@ -237,7 +234,7 @@
             </form>
           </section>
 
-          <section id="calculatorView" class="view card hidden">
+          <section id="calculatorView" class="view card hidden" role="tabpanel" aria-labelledby="tab-calculator" tabindex="0" hidden>
             <span class="eyebrow" id="calculatorEyebrow">HERRAMIENTA DE CÁLCULO</span>
             <h2 id="calculatorTitle">Calculadora científica</h2>
             <p class="muted" id="calculatorDescription">Calcula con funciones trigonométricas, potencias y paréntesis.</p>
@@ -278,7 +275,7 @@
             </div>
           </section>
 
-          <section id="graphView" class="view card hidden">
+          <section id="graphView" class="view card hidden" role="tabpanel" aria-labelledby="tab-graph" tabindex="0" hidden>
             <span class="eyebrow" id="graphEyebrow">LABORATORIO VISUAL</span>
             <h2 id="graphTitle">Graficador de funciones</h2>
             <p class="muted" id="graphDescriptionHelp">Escribe una función de x y explora su forma.</p>
@@ -297,13 +294,13 @@
             </div>
             <div class="graph-frame">
               <canvas id="graphCanvas" aria-label="Gráfica de la función"></canvas>
-              <p id="graphMessage" class="tool-message" aria-live="polite"></p>
+              <p id="graphMessage" class="tool-message" role="alert" aria-live="polite"></p>
             </div>
             <p id="graphDescription" class="graph-description" aria-live="polite"></p>
             <p class="graph-help" id="graphHelp">Funciones disponibles: sin, cos, tan, sqrt, abs, log, exp, pi. Usa la rueda del mouse para zoom.</p>
           </section>
 
-          <section id="rulesView" class="view card hidden">
+          <section id="rulesView" class="view card hidden" role="tabpanel" aria-labelledby="tab-rules" tabindex="0" hidden>
             <span class="eyebrow" id="rulesEyebrow">CONFIGURACIÓN CURRICULAR</span>
             <h2 id="rulesTitle">Temario activo</h2>
             <div id="curriculumRules"></div>

@@ -1,8 +1,12 @@
 import express from "express";
 import cors from "cors";
+import { createServer } from "node:http";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
+import { Server as SocketIOServer } from "socket.io";
+import { createSlidingLimiter } from "./rate-limit.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -20,25 +24,30 @@ const AI_BASE_URL = String(
 ).replace(/\/$/, "");
 const AI_API_KEY = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || "";
 const AI_MODEL = process.env.AI_MODEL || process.env.OPENAI_MODEL || "gpt-4o";
+const HF_API_TOKEN = process.env.HF_API_TOKEN || "";
+const HF_MODEL = process.env.HF_MODEL || "Qwen/Qwen2.5-Math-7B-Instruct";
 
-const systemPrompt = `Eres cure.math AI, un tutor universal de matemáticas: claro, paciente, riguroso y socrático. Puedes ayudar con aritmética, álgebra, geometría, cálculo, estadística, probabilidad, álgebra lineal, matemática discreta y matemática aplicada. Adapta el nivel al estudiante. Da una pista antes de revelar una solución completa, comprueba supuestos y usa notación legible. Si el usuario adjunta materiales, trátalos como contexto de estudio y no inventes contenido que no puedas leer. Si una pregunta no es matemática, redirígela con amabilidad. RESTRICCIÓN PEDAGÓGICA GLOBAL: no utilices el número e ni la función ln en ejemplos, fórmulas, pistas o respuestas; si el material los contiene, explica la idea usando una alternativa permitida o marca esa parte como fuera del temario.`;
+const systemPrompt = `Eres cure.math AI / MathTutor-Uni, un tutor universitario claro, paciente, riguroso y socrático. Puedes ayudar con aritmética, álgebra, geometría, cálculo, estadística, probabilidad, álgebra lineal, matemática discreta y matemática aplicada. Adapta el nivel al estudiante. Enseña mediante andamiaje: explica brevemente la idea, da un solo siguiente paso y pide al estudiante que responda antes de continuar. No reveles la respuesta completa de inmediato. Todo símbolo o expresión matemática debe escribirse en LaTeX limpio: usa \\( ... \\) para matemáticas en línea y \\[ ... \\] para bloques centrados. No uses bloques de código para fórmulas. Analiza los materiales del estudiante sin inventar contenido que no puedas leer. Si una pregunta no es matemática, redirígela con amabilidad. RESTRICCIÓN PEDAGÓGICA GLOBAL: no utilices el número e ni la función ln en ejemplos, fórmulas, pistas o respuestas; si el material los contiene, explica la idea usando una alternativa permitida o marca esa parte como fuera del temario.`;
 const visionSystemPrompt = `${systemPrompt} Analiza la imagen o documento recibido, extrae con cuidado el enunciado matemático y enseña el procedimiento paso a paso. RESTRICCIÓN PEDAGÓGICA INMUTABLE: no uses el número e ni la función ln en ejemplos, fórmulas, pistas o respuestas. Si aparecen en el material, explica la idea con una alternativa permitida o indica que esa parte queda fuera del temario.`;
 const quotaStore = new Map();
 const FREE_LIMIT = 3;
+const tutorDeviceLimiter = createSlidingLimiter({ limit: 5, windowMs: 60_000 });
+const tutorIpLimiter = createSlidingLimiter({ limit: 15, windowMs: 60_000 });
 
 function quotaMiddleware(req, res, next) {
-  const demoPremium = process.env.NODE_ENV !== "production" && process.env.ALLOW_DEMO_PREMIUM === "true";
-  if (demoPremium && req.get("x-plan") === "premium") return next();
-  const key = req.ip || req.socket.remoteAddress || "anonymous";
-  const current = quotaStore.get(key) || { count: 0, resetAt: Date.now() + 24 * 60 * 60 * 1000 };
-  if (Date.now() > current.resetAt) { current.count = 0; current.resetAt = Date.now() + 24 * 60 * 60 * 1000; }
-  if (current.count >= FREE_LIMIT) {
-    return res.status(429).json({ error: "Free Tier agotado.", plan: "free", limit: FREE_LIMIT, upgrade: "Activa Premium para continuar sin límite." });
+  const deviceId = typeof req.body?.deviceId === "string" && req.body.deviceId.trim()
+    ? req.body.deviceId.trim()
+    : `ip:${req.ip || req.socket.remoteAddress || "anonymous"}`;
+  const ip = req.ip || req.socket.remoteAddress || "anonymous";
+  const deviceResult = tutorDeviceLimiter.check(deviceId);
+  const ipResult = tutorIpLimiter.check(ip);
+  const result = deviceResult.allowed && ipResult.allowed ? deviceResult : (!deviceResult.allowed ? deviceResult : ipResult);
+  if (!deviceResult.allowed || !ipResult.allowed) {
+    res.setHeader("Retry-After", String(result.retryAfter));
+    return res.status(429).json({ error: "Límite temporal de tutoría alcanzado.", retryAfter: result.retryAfter, plan: "free" });
   }
-  current.count += 1;
-  quotaStore.set(key, current);
-  res.setHeader("X-Quota-Limit", FREE_LIMIT);
-  res.setHeader("X-Quota-Remaining", Math.max(0, FREE_LIMIT - current.count));
+  res.setHeader("X-Quota-Limit", "5/device, 15/ip");
+  res.setHeader("X-Quota-Remaining", String(result.remaining));
   next();
 }
 
@@ -48,6 +57,7 @@ function imageData(value) {
 
 function modelConfig() {
   if (AI_BASE_URL && AI_API_KEY) return { provider: "openai-compatible", model: AI_MODEL };
+  if (HF_API_TOKEN) return { provider: "huggingface", model: HF_MODEL };
   return { provider: "ollama", model: process.env.OLLAMA_MODEL || "llama3" };
 }
 
@@ -61,6 +71,18 @@ async function chatRequest({ messages, model, images = [] }) {
       body: JSON.stringify({ model: model || config.model, messages, temperature: 0.2 })
     });
     return { response, parse: async data => data?.choices?.[0]?.message?.content };
+  }
+
+  if (config.provider === "huggingface") {
+    const prompt = messages.map(message => `${message.role.toUpperCase()}: ${message.content}`).join("\n\n");
+    const hfModelPath = (model || config.model).split("/").map(encodeURIComponent).join("/");
+    const response = await fetch(`https://router.huggingface.co/hf-inference/models/${hfModelPath}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${HF_API_TOKEN}` },
+      signal: AbortSignal.timeout(45000),
+      body: JSON.stringify({ inputs: `${prompt}\n\nASSISTANT:`, parameters: { max_new_tokens: 500, temperature: 0.25, return_full_text: false } })
+    });
+    return { response, parse: async data => Array.isArray(data) ? data[0]?.generated_text : data?.generated_text };
   }
 
   const ollamaMessages = messages.map(message => ({
@@ -124,6 +146,19 @@ function localTutorAnswer(question, topic = "all", subject = "calculus", languag
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map(origin => origin.trim()).filter(Boolean)
   : ["https://cure-math-ai.onrender.com", "http://localhost:3000"];
+const httpServer = createServer(app);
+const io = new SocketIOServer(httpServer, { cors: { origin: allowedOrigins, methods: ["GET", "POST"] } });
+let onlineUsers = 0;
+
+io.on("connection", socket => {
+  onlineUsers += 1;
+  io.emit("presence_update", { onlineUsers });
+  socket.on("disconnect", () => {
+    onlineUsers = Math.max(0, onlineUsers - 1);
+    io.emit("presence_update", { onlineUsers });
+  });
+});
+
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json({ limit: "15mb" }));
 app.disable("x-powered-by");
@@ -131,17 +166,35 @@ app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdn.socket.io https://cdnjs.cloudflare.com; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob:; worker-src 'self' blob:; connect-src 'self' https://api.openai.com https://router.huggingface.co wss://cure-math-ai.onrender.com https://cure-math-ai.onrender.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'");
   next();
 });
 app.use(express.static(FRONTEND));
 
+app.get("/health", (_req, res) => {
+  res.json({ ok: true, service: "cure.math AI", time: new Date().toISOString() });
+});
+
 app.get("/api/app-meta", (_req, res) => {
-  res.json({ name: "cure.math AI", version: "0.6.0", updatedAt: new Date().toISOString(), status: "ready", capabilities: ["vision", "dynamic-curriculum", "free-tier", "bilingual-ui", "installable-web-app"], ai: modelConfig().provider });
+  res.json({ name: "cure.math AI", version: "0.7.0", updatedAt: new Date().toISOString(), status: "ready", capabilities: ["vision", "dynamic-curriculum", "free-tier", "bilingual-ui", "installable-web-app", "katex", "worker-graph", "realtime-presence"], ai: modelConfig().provider });
 });
 
 app.get("/api/ai/status", (_req, res) => {
   const config = modelConfig();
-  res.json({ provider: config.provider, model: config.model, vision: Boolean(process.env.AI_VISION_MODEL || process.env.OLLAMA_VISION_MODEL), configured: config.provider === "openai-compatible" || Boolean(process.env.OLLAMA_URL) });
+  res.json({ provider: config.provider, model: config.model, vision: Boolean(process.env.AI_VISION_MODEL || process.env.OLLAMA_VISION_MODEL), configured: config.provider !== "ollama" || Boolean(process.env.OLLAMA_URL) });
+});
+
+app.get("/api/presence", (_req, res) => {
+  res.json({ onlineUsers });
+});
+
+const deviceProfiles = new Map();
+app.post("/api/auth/session", (req, res) => {
+  const requestedId = typeof req.body?.deviceId === "string" ? req.body.deviceId.trim() : "";
+  const deviceId = /^[a-zA-Z0-9._-]{8,128}$/.test(requestedId) ? requestedId : randomUUID();
+  if (!deviceProfiles.has(deviceId)) deviceProfiles.set(deviceId, { streak: 0, attempts: 0, correct: 0, history: [] });
+  return res.json({ deviceId, profile: deviceProfiles.get(deviceId) });
 });
 
 app.get("/api/quota", (req, res) => {
@@ -265,7 +318,7 @@ async function handleTutorRequest(req, res) {
       messages: [
         {
           role: "system",
-          content: `${systemPrompt}\nCurso seleccionado: ${subject}. Nivel: ${level}. Currículo disponible como referencia: ${curriculum.allowedTopics.join(", ")}. Tema seleccionado: ${topic}. Responde en ${language}, con pasos cortos. Usa exclusivamente LaTeX delimitado por $...$ para expresiones en línea y $$...$$ para expresiones destacadas. No uses bloques de código para matemáticas. Acción solicitada: ${action === "hint" ? "da una sola pista progresiva y no reveles la respuesta" : action === "question" ? "haz una pregunta de control que ayude al estudiante a descubrir el siguiente paso" : action === "review" ? "evalúa el procedimiento del estudiante, señala el primer punto que debe revisar y propone una corrección guiada" : "responde como tutor socrático, empezando por una pista antes de la solución"}.`
+          content: `${systemPrompt}\nCurso seleccionado: ${subject}. Nivel: ${level}. Currículo disponible como referencia: ${curriculum.allowedTopics.join(", ")}. Tema seleccionado: ${topic}. Responde en ${language}, con un máximo de cuatro frases cortas y termina con una pregunta. Usa \\( ... \\) para matemáticas en línea y \\[ ... \\] para ecuaciones destacadas. No uses bloques de código para matemáticas. Acción solicitada: ${action === "hint" ? "da una sola pista progresiva y no reveles la respuesta" : action === "question" ? "haz una pregunta de control que ayude al estudiante a descubrir el siguiente paso" : action === "review" ? "evalúa el procedimiento del estudiante, señala el primer punto que debe revisar y propone una corrección guiada" : "responde como tutor socrático, empezando por una pista antes de la solución"}.`
         },
         ...priorConversation.slice(0, -1),
         { role: "user", content: materialContext ? `${question}\n\nMateriales disponibles:\n${materialContext}` : question }
@@ -321,6 +374,17 @@ app.get("/*", (_req, res) => {
   res.sendFile(path.join(FRONTEND, "index.html"));
 });
 
-app.listen(port, "0.0.0.0", () => {
+function shutdown(signal) {
+  console.log(`Cerrando servidor por ${signal}...`);
+  tutorDeviceLimiter.clear();
+  tutorIpLimiter.clear();
+  httpServer.close(() => process.exit(0));
+  setTimeout(() => process.exit(1), 5000).unref();
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+httpServer.listen(port, "0.0.0.0", () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
 });

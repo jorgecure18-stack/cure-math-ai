@@ -24,7 +24,22 @@ const TOPIC_GUIDES = {
   }
 };
 
+function getDeviceId() {
+  try {
+    const stored = localStorage.getItem("cureDeviceId");
+    if (stored) return stored;
+    const generated = globalThis.crypto?.randomUUID?.() || `device-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem("cureDeviceId", generated);
+    return generated;
+  } catch {
+    return `memory-device-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+}
+
 const state = {
+  deviceId: getDeviceId(),
+  serverProfile: null,
+  onlineUsers: 0,
   topic: "all",
   language: localStorage.getItem("cureLanguage") || "es",
   subject: localStorage.getItem("cureSubject") || "calculus",
@@ -322,7 +337,50 @@ function applyLanguage() {
 }
 
 async function renderMath() {
-  if (window.MathJax?.typesetPromise) await window.MathJax.typesetPromise();
+  if (window.renderMathInElement) {
+    window.renderMathInElement(document.body, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "$", right: "$", display: false },
+        { left: "\\(", right: "\\)", display: false },
+        { left: "\\[", right: "\\]", display: true }
+      ],
+      throwOnError: false
+    });
+  }
+}
+
+async function initDeviceSession() {
+  try {
+    const response = await fetch("/api/auth/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deviceId: state.deviceId })
+    });
+    if (!response.ok) return;
+    const data = await response.json();
+    state.deviceId = data.deviceId;
+    state.serverProfile = data.profile;
+    localStorage.setItem("cureDeviceId", state.deviceId);
+  } catch {
+    // The app remains usable if the optional server profile is unavailable.
+  }
+}
+
+function updatePresenceCount(count = 0) {
+  state.onlineUsers = count;
+  const label = $("#onlineCount");
+  if (!label) return;
+  label.textContent = state.language === "en"
+    ? `${count} university students online`
+    : `${count} universitarios en línea`;
+}
+
+function initPresence() {
+  if (!window.io) return;
+  const socket = window.io({ transports: ["websocket", "polling"] });
+  socket.on("presence_update", payload => updatePresenceCount(Number(payload?.onlineUsers) || 0));
+  fetch("/api/presence").then(response => response.json()).then(payload => updatePresenceCount(payload.onlineUsers)).catch(() => {});
 }
 
 function addMaterial(file) {
@@ -714,14 +772,41 @@ function gradeSim() {
 function showView(view) {
   $$(".tab").forEach(tab => {
     tab.classList.toggle("active", tab.dataset.view === view);
+    tab.setAttribute("aria-selected", String(tab.dataset.view === view));
+    tab.tabIndex = tab.dataset.view === view ? 0 : -1;
   });
 
   $$(".view").forEach(section => {
-    section.classList.toggle("hidden", section.id !== `${view}View`);
+    const active = section.id === `${view}View`;
+    section.classList.toggle("hidden", !active);
+    section.hidden = !active;
   });
 
   if (view === "sim" && !state.sim.length) makeSim();
   if (view === "rules") loadCurriculum();
+}
+
+function initAccessibleTabs() {
+  const tabs = $$(".tab");
+  tabs.forEach((tab, index) => {
+    tab.onclick = () => showView(tab.dataset.view);
+    tab.onkeydown = event => {
+      const direction = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
+      const targetIndex = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (index + direction + tabs.length) % tabs.length;
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        showView(tab.dataset.view);
+        return;
+      }
+      if (event.key === "Home" || event.key === "End" || direction) {
+        event.preventDefault();
+        const target = tabs[targetIndex];
+        target.focus();
+        showView(target.dataset.view);
+      }
+    };
+  });
+  showView(tabs.find(tab => tab.getAttribute("aria-selected") === "true")?.dataset.view || "practice");
 }
 
 async function loadCurriculum() {
@@ -873,6 +958,7 @@ async function sendChat(event) {
         level: state.level,
         language: state.language,
         action: state.chatAction,
+        deviceId: state.deviceId,
         conversation: state.chatHistory.slice(-8),
         materialContext: state.materials.map(item => `${item.name}\n${item.text || "(archivo adjunto; usa su nombre como referencia)"}`).join("\n\n").slice(0, 16000)
       })
@@ -912,9 +998,7 @@ function initCookieBanner() {
   $("#acceptCookies").onclick = () => { localStorage.setItem("cureCookieConsent", "accepted"); banner.classList.add("hidden"); };
 }
 
-$$(".tab").forEach(tab => {
-  tab.onclick = () => showView(tab.dataset.view);
-});
+initAccessibleTabs();
 
 $$(".topic").forEach(button => {
   button.onclick = () => {
@@ -945,6 +1029,7 @@ $("#chatForm").onsubmit = sendChat;
 $("#languageToggle").onclick = () => {
   state.language = state.language === "es" ? "en" : "es";
   applyLanguage();
+  updatePresenceCount(state.onlineUsers);
   if (state.question) renderQuestion();
   loadAiStatus();
 };
@@ -971,6 +1056,8 @@ if ($("#levelSelect")) {
   $("#levelSelect").onchange = event => { state.level = event.target.value; localStorage.setItem("cureLevel", state.level); };
 }
 initCookieBanner();
+initDeviceSession();
+initPresence();
 loadLearningPlan();
 checkAppUpdate();
 loadAiStatus();

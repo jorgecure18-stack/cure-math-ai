@@ -2,7 +2,7 @@ const FUNCTIONS = {
   sin: Math.sin, cos: Math.cos, tan: Math.tan,
   asin: Math.asin, acos: Math.acos, atan: Math.atan,
   sqrt: Math.sqrt, abs: Math.abs, floor: Math.floor,
-  ceil: Math.ceil, round: Math.round, exp: Math.exp, log: Math.log10
+  ceil: Math.ceil, round: Math.round, exp: Math.exp, log: Math.log10, ln: Math.log
 };
 const CONSTANTS = { pi: Math.PI, e: Math.E };
 
@@ -38,7 +38,8 @@ function addImplicitMultiplication(tokens) {
 
 function toRpn(input) {
   const output = []; const stack = [];
-  const precedence = { "u-": 4, "!": 5, "^": 3, "*": 2, "/": 2, "%": 2, "+": 1, "-": 1 };
+  // La potencia se evalúa antes del menos unario: -x^2 significa -(x^2).
+  const precedence = { "u-": 3, "!": 5, "^": 3, "*": 2, "/": 2, "%": 2, "+": 1, "-": 1 };
   const rightAssociative = new Set(["^", "u-"]); let previous = "start";
   for (const token of addImplicitMultiplication(tokenize(input))) {
     if (token.type === "number") { output.push(token); previous = "value"; continue; }
@@ -87,7 +88,7 @@ function evaluateWithMathJs(input, variables, angleMode) {
     sin: value => Math.sin(toRadians(value)), cos: value => Math.cos(toRadians(value)), tan: value => Math.tan(toRadians(value)),
     asin: value => fromRadians(Math.asin(value)), acos: value => fromRadians(Math.acos(value)), atan: value => fromRadians(Math.atan(value)),
     sqrt: Math.sqrt, abs: Math.abs, floor: Math.floor, ceil: Math.ceil, round: Math.round,
-    exp: Math.exp, log: Math.log10
+    exp: Math.exp, log: Math.log10, ln: Math.log
   };
   try {
     const evaluated = mathLib.evaluate(String(input || ""), scope);

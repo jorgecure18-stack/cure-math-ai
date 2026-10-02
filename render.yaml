@@ -5,7 +5,7 @@ services:
     rootDir: backend
     buildCommand: npm install
     startCommand: npm start
-    healthCheckPath: /api/app-meta
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
@@ -13,3 +13,13 @@ services:
         sync: false
       - key: OLLAMA_MODEL
         sync: false
+      - key: AI_BASE_URL
+        sync: false
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_MODEL
+        value: gpt-4o
+      - key: HF_API_TOKEN
+        sync: false
+      - key: HF_MODEL
+        value: Qwen/Qwen2.5-Math-7B-Instruct
