@@ -26,6 +26,9 @@ const AI_API_KEY = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || "";
 const AI_MODEL = process.env.AI_MODEL || process.env.OPENAI_MODEL || "gpt-4o";
 const HF_API_TOKEN = process.env.HF_API_TOKEN || "";
 const HF_MODEL = process.env.HF_MODEL || "Qwen/Qwen2.5-Math-7B-Instruct";
+const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY || "";
+const CLAUDE_MODEL = process.env.CLAUDE_MODEL || "claude-sonnet-5-5";
+const AI_PROVIDER = process.env.AI_PROVIDER || "";
 
 const systemPrompt = `Eres cure.math AI / MathTutor-Uni, un tutor universitario claro, paciente, riguroso y socrático. Puedes ayudar con aritmética, álgebra, geometría, cálculo, estadística, probabilidad, álgebra lineal, matemática discreta y matemática aplicada. Adapta el nivel al estudiante. Enseña mediante andamiaje: explica brevemente la idea, da un solo siguiente paso y pide al estudiante que responda antes de continuar. No reveles la respuesta completa de inmediato. Todo símbolo o expresión matemática debe escribirse en LaTeX limpio: usa \\( ... \\) para matemáticas en línea y \\[ ... \\] para bloques centrados. No uses bloques de código para fórmulas. Analiza los materiales del estudiante sin inventar contenido que no puedas leer. Si una pregunta no es matemática, redirígela con amabilidad. RESTRICCIÓN PEDAGÓGICA GLOBAL: no utilices el número e ni la función ln en ejemplos, fórmulas, pistas o respuestas; si el material los contiene, explica la idea usando una alternativa permitida o marca esa parte como fuera del temario.`;
 const visionSystemPrompt = `${systemPrompt} Analiza la imagen o documento recibido, extrae con cuidado el enunciado matemático y enseña el procedimiento paso a paso. RESTRICCIÓN PEDAGÓGICA INMUTABLE: no uses el número e ni la función ln en ejemplos, fórmulas, pistas o respuestas. Si aparecen en el material, explica la idea con una alternativa permitida o indica que esa parte queda fuera del temario.`;
@@ -56,13 +59,25 @@ function imageData(value) {
 }
 
 function modelConfig() {
+  if (CLAUDE_API_KEY && (AI_PROVIDER === "anthropic" || (!AI_PROVIDER && !AI_BASE_URL && !HF_API_TOKEN))) return { provider: "anthropic", model: CLAUDE_MODEL };
   if (AI_BASE_URL && AI_API_KEY) return { provider: "openai-compatible", model: AI_MODEL };
   if (HF_API_TOKEN) return { provider: "huggingface", model: HF_MODEL };
   return { provider: "ollama", model: process.env.OLLAMA_MODEL || "llama3" };
 }
 
-async function chatRequest({ messages, model, images = [] }) {
+async function chatRequest({ messages, model, images = [], stream = false }) {
   const config = modelConfig();
+  if (config.provider === "anthropic") {
+    const system = messages.find(message => message.role === "system")?.content || "";
+    const userMessages = messages.filter(message => message.role !== "system").map(message => ({ role: message.role, content: message.content }));
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": CLAUDE_API_KEY, "anthropic-version": "2023-06-01" },
+      signal: AbortSignal.timeout(30000),
+      body: JSON.stringify({ model: model || config.model, max_tokens: 700, system, messages: userMessages, stream })
+    });
+    return { response, parse: async data => data?.content?.find(block => block.type === "text")?.text || "" };
+  }
   if (config.provider === "openai-compatible") {
     const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
       method: "POST",
@@ -102,6 +117,41 @@ async function chatRequest({ messages, model, images = [] }) {
     })
   });
   return { response, parse: async data => data?.message?.content };
+}
+
+async function relayAnthropicStream(upstream, res) {
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no"
+  });
+  const reader = upstream.body?.getReader();
+  if (!reader) throw new Error("La respuesta de Claude no tiene un cuerpo legible.");
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+    for (const line of lines) {
+      if (!line.startsWith("data: ")) continue;
+      try {
+        const event = JSON.parse(line.slice(6));
+        if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
+          res.write(`data: ${JSON.stringify({ t: event.delta.text })}\n\n`);
+        } else if (event.type === "error") {
+          res.write(`data: ${JSON.stringify({ error: "El tutor tuvo un problema." })}\n\n`);
+        }
+      } catch {
+        // Ignora líneas SSE parciales o eventos no JSON.
+      }
+    }
+  }
+  res.write("data: [DONE]\n\n");
+  res.end();
 }
 
 function visionRequest({ image, mimeType, prompt, language, subject, level, curriculum }) {
@@ -177,7 +227,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.get("/api/app-meta", (_req, res) => {
-  res.json({ name: "cure.math AI", version: "0.7.0", updatedAt: new Date().toISOString(), status: "ready", capabilities: ["vision", "dynamic-curriculum", "free-tier", "bilingual-ui", "installable-web-app", "katex", "worker-graph", "realtime-presence"], ai: modelConfig().provider });
+  res.json({ name: "cure.math AI", version: "0.8.0", updatedAt: new Date().toISOString(), status: "ready", capabilities: ["vision", "dynamic-curriculum", "free-tier", "bilingual-ui", "installable-web-app", "katex", "worker-graph", "realtime-presence", "claude-stream"], ai: modelConfig().provider });
 });
 
 app.get("/api/ai/status", (_req, res) => {
@@ -327,7 +377,10 @@ async function handleTutorRequest(req, res) {
       .map(message => ({ role: message.role, content: message.content.trim().slice(0, 1500) }))
       .filter(message => message.content)
       .slice(-8);
+    const streamRequested = req.path === "/api/tutor/stream" || req.query.stream === "1" || req.headers.accept?.includes("text/event-stream");
+    const providerConfig = modelConfig();
     const { response: ollamaResponse, parse } = await chatRequest({
+      stream: streamRequested && providerConfig.provider === "anthropic",
       messages: [
         {
           role: "system",
@@ -337,6 +390,11 @@ async function handleTutorRequest(req, res) {
         { role: "user", content: materialContext ? `${question}\n\nMateriales disponibles:\n${materialContext}` : question }
       ]
     });
+
+    if (streamRequested && providerConfig.provider === "anthropic" && ollamaResponse.ok) {
+      await relayAnthropicStream(ollamaResponse, res);
+      return;
+    }
 
     if (!ollamaResponse.ok) {
       const errorText = await ollamaResponse.text();
@@ -364,6 +422,9 @@ async function handleTutorRequest(req, res) {
 
 // Canonical tutor endpoint for the public API.
 app.post("/api/tutor", quotaMiddleware, handleTutorRequest);
+
+// SSE variant for clients that want incremental tutor text.
+app.post("/api/tutor/stream", quotaMiddleware, handleTutorRequest);
 
 // Backward-compatible alias used by older frontend builds.
 app.post("/api/chat", quotaMiddleware, handleTutorRequest);

@@ -18,6 +18,7 @@ Duplica `.env.example` como `.env` y configura solo el proveedor que quieras usa
 
 - `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`: proveedor compatible con Chat Completions, incluido OpenAI.
 - `HF_API_TOKEN`, `HF_MODEL`: Hugging Face Inference; el token se queda en el servidor.
+- `AI_PROVIDER=anthropic`, `CLAUDE_API_KEY`, `CLAUDE_MODEL`: Claude opcional; `/api/tutor` devuelve JSON y `/api/tutor/stream` devuelve SSE.
 - `OLLAMA_URL`, `OLLAMA_MODEL`: servidor Ollama externo o local.
 - `ALLOWED_ORIGINS`: orígenes HTTPS separados por coma.
 
