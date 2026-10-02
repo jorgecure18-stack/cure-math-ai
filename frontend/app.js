@@ -1,4 +1,5 @@
-import { evaluateExpression, initCalculator, initGraph } from "./math-tools.js";
+import { evaluateExpression, initCalculator } from "./math-tools.js";
+import { initGraph } from "./graph-tool.js";
 
 const TOPIC_GUIDES = {
   all: {
@@ -37,6 +38,7 @@ const state = {
   simAnswered: 0,
   simLoading: false,
   chatHistory: [],
+  chatAction: "ask",
   recent: {
     all: [],
     chain: [],
@@ -870,6 +872,7 @@ async function sendChat(event) {
         subject: state.subject,
         level: state.level,
         language: state.language,
+        action: state.chatAction,
         conversation: state.chatHistory.slice(-8),
         materialContext: state.materials.map(item => `${item.name}\n${item.text || "(archivo adjunto; usa su nombre como referencia)"}`).join("\n\n").slice(0, 16000)
       })
@@ -890,8 +893,10 @@ async function sendChat(event) {
     if (data.mode === "fallback") {
       loading.textContent = `${data.answer}\n\n[Guía local activa: ${data.notice}]`;
     }
+    state.chatAction = "ask";
   } catch (error) {
     loading.textContent = state.language === "en" ? "The tutor is temporarily unavailable. Try again in a moment." : "El tutor no está disponible temporalmente. Intenta de nuevo en un momento.";
+    state.chatAction = "ask";
   } finally {
     $("#chatSubmit").disabled = false;
     input.focus();
@@ -944,6 +949,7 @@ $("#languageToggle").onclick = () => {
 
   $$('[data-prompt]').forEach(button => {
     button.onclick = () => {
+      state.chatAction = button.dataset.action || "ask";
       $("#chatInput").value = state.language === "en" ? (button.dataset.promptEn || button.dataset.prompt) : button.dataset.prompt;
       $("#chatForm").requestSubmit();
     };

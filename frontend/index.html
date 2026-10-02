@@ -11,6 +11,8 @@
     <title>cure.math AI · Cálculo 1</title>
     <link rel="stylesheet" href="/styles.css" />
     <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Chart.js adds responsive axes/tooltips; the app keeps a native fallback if the CDN is unavailable. -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   </head>
   <body>
     <main class="shell">
@@ -196,9 +198,9 @@
               <div class="quick-prompts">
                 <span class="eyebrow" id="tryIdeaLabel">Prueba una idea</span>
                 <div>
-                  <button class="chip" data-prompt="Explícame la regla de la cadena con una pista" data-prompt-en="Explain the chain rule with a hint">Dame una pista</button>
-                  <button class="chip" data-prompt="Hazme una pregunta sobre diferenciación implícita" data-prompt-en="Ask me a question about implicit differentiation">Hazme una pregunta</button>
-                  <button class="chip" data-prompt="Revisa mi procedimiento paso a paso" data-prompt-en="Review my work step by step">Revisa mi procedimiento</button>
+                  <button class="chip" data-action="hint" data-prompt="Explícame la regla de la cadena con una pista" data-prompt-en="Explain the chain rule with a hint">Dame una pista</button>
+                  <button class="chip" data-action="question" data-prompt="Hazme una pregunta sobre diferenciación implícita" data-prompt-en="Ask me a question about implicit differentiation">Hazme una pregunta</button>
+                  <button class="chip" data-action="review" data-prompt="Revisa mi procedimiento paso a paso" data-prompt-en="Review my work step by step">Revisa mi procedimiento</button>
                 </div>
               </div>
               <div class="material-dropzone" id="materialDropzone">
@@ -239,6 +241,7 @@
               <div class="calculator-toolbar">
                 <button class="button secondary" id="angleMode" type="button">Ángulo: Radianes</button>
                 <button class="button secondary" id="copyResult" type="button">Copiar resultado</button>
+                <button class="button secondary" id="copyToQuestion" type="button">Copiar a la pregunta activa</button>
                 <span class="muted" id="calculatorHint">Enter = calcular · x² = x^2</span>
               </div>
               <div class="calculator-memory" aria-label="Memoria de calculadora">
@@ -284,7 +287,7 @@
               <button class="button secondary" id="applyRange" type="button">Aplicar rango</button>
             </div>
             <div class="graph-frame">
-              <canvas id="graphCanvas" aria-label="Gráfica de la función">Tu navegador no puede mostrar la gráfica.</canvas>
+              <canvas id="graphCanvas" aria-label="Gráfica de la función"></canvas>
               <p id="graphMessage" class="tool-message" aria-live="polite"></p>
             </div>
             <p id="graphDescription" class="graph-description" aria-live="polite"></p>

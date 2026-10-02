@@ -15,7 +15,7 @@ const port = Number(process.env.PORT || 3000);
 app.set("trust proxy", 1);
 const AI_BASE_URL = String(process.env.AI_BASE_URL || "").replace(/\/$/, "");
 const AI_API_KEY = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || "";
-const AI_MODEL = process.env.AI_MODEL || process.env.OPENAI_MODEL || "gpt-4o-mini";
+const AI_MODEL = process.env.AI_MODEL || process.env.OPENAI_MODEL || "gpt-4o";
 
 const systemPrompt = `Eres cure.math AI, un tutor universal de matemáticas: claro, paciente, riguroso y socrático. Puedes ayudar con aritmética, álgebra, geometría, cálculo, estadística, probabilidad, álgebra lineal, matemática discreta y matemática aplicada. Adapta el nivel al estudiante. Da una pista antes de revelar una solución completa, comprueba supuestos y usa notación legible. Si el usuario adjunta materiales, trátalos como contexto de estudio y no inventes contenido que no puedas leer. Si una pregunta no es matemática, redirígela con amabilidad. RESTRICCIÓN PEDAGÓGICA GLOBAL: no utilices el número e ni la función ln en ejemplos, fórmulas, pistas o respuestas; si el material los contiene, explica la idea usando una alternativa permitida o marca esa parte como fuera del temario.`;
 const visionSystemPrompt = `${systemPrompt} Analiza la imagen o documento recibido, extrae con cuidado el enunciado matemático y enseña el procedimiento paso a paso. RESTRICCIÓN PEDAGÓGICA INMUTABLE: no uses el número e ni la función ln en ejemplos, fórmulas, pistas o respuestas. Si aparecen en el material, explica la idea con una alternativa permitida o indica que esa parte queda fuera del temario.`;
@@ -96,7 +96,7 @@ function readMathApps() {
   return JSON.parse(fs.readFileSync(MATH_APPS_PATH, "utf8"));
 }
 
-function localTutorAnswer(question, topic = "all", subject = "calculus", language = "es") {
+function localTutorAnswer(question, topic = "all", subject = "calculus", language = "es", action = "ask") {
   const lower = question.toLowerCase();
   const english = language === "English" || language === "en";
   const guide = {
@@ -111,6 +111,9 @@ function localTutorAnswer(question, topic = "all", subject = "calculus", languag
   }
 
   const subjectHint = subject === "algebra" ? (english ? "Define the unknown, organize the terms, and check by substitution." : "Define la incógnita, ordena los términos y comprueba sustituyendo.") : subject === "geometry" ? (english ? "Draw the figure, note the data, and choose the geometric relationship connecting what you seek." : "Dibuja la figura, anota los datos y elige la relación geométrica que conecta lo que buscas.") : subject === "statistics" ? (english ? "Identify the population, variable, and measure requested before calculating." : "Identifica la población, la variable y la medida que te están pidiendo antes de calcular.") : guide;
+  if (action === "question") return english ? `Control question for ${subject}: what is the outermost operation in this problem, and what would its derivative be?` : `Pregunta de control para ${subject}: ¿cuál es la operación más externa del problema y cuál sería su derivada?`;
+  if (action === "review") return english ? `Guided review for ${subject}: identify the first line where your procedure changes the structure of the problem, then check the matching rule. Paste that line and I will review it.` : `Revisión guiada de ${subject}: identifica la primera línea donde tu procedimiento cambia la estructura del problema y comprueba la regla correspondiente. Pega esa línea y la revisaré.`;
+  if (action === "hint") return english ? `Hint for ${subject}: ${subjectHint}\n\nDo not calculate everything yet; write only the next transformation.` : `Pista para ${subject}: ${subjectHint}\n\nNo calcules todo todavía; escribe solo la siguiente transformación.`;
   return english ? `Guided hint for ${subject}:\n\n${subjectHint}\n\nWrite the expression or step that is confusing you and we will work through it without skipping the reasoning.` : `Pista guiada para ${subject}:\n\n${subjectHint}\n\nEscribe la expresión o el paso que te confunde y lo resolvemos juntos sin saltarnos el razonamiento.`;
 }
 
@@ -249,6 +252,7 @@ app.post("/api/chat", quotaMiddleware, async (req, res) => {
     const language = req.body?.language === "en" ? "English" : "Spanish";
     const subject = typeof req.body?.subject === "string" ? req.body.subject : "calculus";
     const level = typeof req.body?.level === "string" ? req.body.level : "explore";
+    const action = ["hint", "question", "review", "ask"].includes(req.body?.action) ? req.body.action : "ask";
     const materialContext = typeof req.body?.materialContext === "string" ? req.body.materialContext.slice(0, 16000) : "";
     const priorConversation = Array.isArray(req.body?.conversation)
       ? req.body.conversation.filter(message => ["user", "assistant"].includes(message?.role) && typeof message?.content === "string").slice(-8)
@@ -257,7 +261,7 @@ app.post("/api/chat", quotaMiddleware, async (req, res) => {
       messages: [
         {
           role: "system",
-          content: `${systemPrompt}\nCurso seleccionado: ${subject}. Nivel: ${level}. Currículo disponible como referencia: ${curriculum.allowedTopics.join(", ")}. Tema seleccionado: ${topic}. Responde en ${language}, con una pista primero y pasos cortos. No des por hecho la respuesta del estudiante.`
+          content: `${systemPrompt}\nCurso seleccionado: ${subject}. Nivel: ${level}. Currículo disponible como referencia: ${curriculum.allowedTopics.join(", ")}. Tema seleccionado: ${topic}. Responde en ${language}, con pasos cortos. Usa exclusivamente LaTeX delimitado por $...$ para expresiones en línea y $$...$$ para expresiones destacadas. No uses bloques de código para matemáticas. Acción solicitada: ${action === "hint" ? "da una sola pista progresiva y no reveles la respuesta" : action === "question" ? "haz una pregunta de control que ayude al estudiante a descubrir el siguiente paso" : action === "review" ? "evalúa el procedimiento del estudiante, señala el primer punto que debe revisar y propone una corrección guiada" : "responde como tutor socrático, empezando por una pista antes de la solución"}.`
         },
         ...priorConversation.slice(0, -1),
         { role: "user", content: materialContext ? `${question}\n\nMateriales disponibles:\n${materialContext}` : question }
@@ -269,7 +273,7 @@ app.post("/api/chat", quotaMiddleware, async (req, res) => {
       console.warn("Ollama respondió con error:", errorText);
       return res.json({
         mode: "fallback",
-        answer: localTutorAnswer(question, topic, subject, language),
+        answer: localTutorAnswer(question, topic, subject, language, action),
         notice: language === "English" ? "Ollama did not respond correctly; this answer uses the local curriculum guide." : "Ollama no respondió correctamente; esta respuesta usa la guía curricular local."
       });
     }
@@ -282,7 +286,7 @@ app.post("/api/chat", quotaMiddleware, async (req, res) => {
     console.warn("Ollama no disponible; se activa el tutor local:", error.message);
     return res.json({
       mode: "fallback",
-      answer: localTutorAnswer(req.body?.question || "", req.body?.topic || "all", req.body?.subject || "calculus", req.body?.language === "en" ? "English" : "Spanish"),
+      answer: localTutorAnswer(req.body?.question || "", req.body?.topic || "all", req.body?.subject || "calculus", req.body?.language === "en" ? "English" : "Spanish", req.body?.action || "ask"),
       notice: req.body?.language === "en" ? "Ollama is not available now; this answer uses the local curriculum guide." : "Ollama no está disponible ahora; esta respuesta usa la guía curricular local."
     });
   }

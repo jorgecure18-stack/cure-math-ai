@@ -746,12 +746,12 @@ body { background: radial-gradient(circle at 10% 0%, #fffdf7 0, transparent 35%)
 .graph-controls input, .range-controls input { min-width: 90px; border: 1px solid var(--line); border-radius: 10px; padding: 10px; color: var(--ink); background: #fff; }
 .graph-controls > input { flex: 1; min-width: 180px; font: 700 1rem ui-monospace, monospace; }
 .graph-controls .button, .range-controls .button { padding: 9px 12px; font-size: 12px; }
-.graph-frame { position: relative; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: #fbfdfc; }
-#graphCanvas { display: block; width: 100%; height: 380px; }
+.graph-frame { position: relative; height: 380px; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: #fbfdfc; }
+#graphCanvas { display: block; width: 100% !important; height: 100% !important; }
 .tool-message { position: absolute; inset: 50% 20px auto; margin: 0; text-align: center; color: var(--muted); font-weight: 700; pointer-events: none; }
 .graph-description { min-height: 20px; color: var(--teal); font: 700 12px ui-monospace, monospace; }
 .graph-help { color: var(--muted); font-size: 12px; }
 .chat-message { white-space: pre-wrap; }
 .material-item { align-items: center; padding: 7px 9px; border-radius: 9px; background: #fff; }
 .material-item button { border: 0; background: transparent; color: var(--bad); cursor: pointer; font-weight: 800; }
-@media (max-width: 800px) { .top-actions { flex-wrap: wrap; justify-content: flex-end; } .status-pill { display: none; } .assistant-tools, .subject-grid { grid-template-columns: 1fr; } .dashboard-strip, .footer, .chat-footer, .universe-bar { align-items: flex-start; flex-direction: column; } .cookie-banner { flex-direction: column; align-items: stretch; } .calculator-toolbar { align-items: flex-start; } .calculator-toolbar .muted { width: 100%; } #graphCanvas { height: 290px; } }
+@media (max-width: 800px) { .top-actions { flex-wrap: wrap; justify-content: flex-end; } .status-pill { display: none; } .assistant-tools, .subject-grid { grid-template-columns: 1fr; } .dashboard-strip, .footer, .chat-footer, .universe-bar { align-items: flex-start; flex-direction: column; } .cookie-banner { flex-direction: column; align-items: stretch; } .calculator-toolbar { align-items: flex-start; } .calculator-toolbar .muted { width: 100%; } .graph-frame { height: 290px; } }
