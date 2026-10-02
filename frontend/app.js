@@ -891,7 +891,7 @@ async function sendChat(event) {
       loading.textContent = `${data.answer}\n\n[Guía local activa: ${data.notice}]`;
     }
   } catch (error) {
-    loading.textContent = error.message;
+    loading.textContent = state.language === "en" ? "The tutor is temporarily unavailable. Try again in a moment." : "El tutor no está disponible temporalmente. Intenta de nuevo en un momento.";
   } finally {
     $("#chatSubmit").disabled = false;
     input.focus();

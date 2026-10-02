@@ -96,21 +96,22 @@ function readMathApps() {
   return JSON.parse(fs.readFileSync(MATH_APPS_PATH, "utf8"));
 }
 
-function localTutorAnswer(question, topic = "all", subject = "calculus") {
+function localTutorAnswer(question, topic = "all", subject = "calculus", language = "es") {
   const lower = question.toLowerCase();
+  const english = language === "English" || language === "en";
   const guide = {
-    chain: "Busca la función exterior e interior. Deriva la exterior conservando la interior y multiplica por la derivada de la interior.",
-    implicit: "Deriva ambos lados respecto de x. Cada término que contenga y aporta un factor y'. Después agrupa y' y despeja.",
-    tangent: "Calcula y', evalúala en el punto para obtener la pendiente m y usa y-y₀=m(x-x₀).",
-    all: "Primero identifica la estructura: composición, producto, cociente, ecuación implícita o una recta tangente. Luego aplica la regla correspondiente paso a paso."
+    chain: english ? "Find the outer and inner functions. Differentiate the outer layer, keep the inner layer, and multiply by its derivative." : "Busca la función exterior e interior. Deriva la exterior conservando la interior y multiplica por la derivada de la interior.",
+    implicit: english ? "Differentiate both sides with respect to x. Each term containing y contributes a factor y'. Then group the y' terms and isolate them." : "Deriva ambos lados respecto de x. Cada término que contenga y aporta un factor y'. Después agrupa y' y despeja.",
+    tangent: english ? "Calculate y', evaluate it at the point to get the slope m, and use y-y₀=m(x-x₀)." : "Calcula y', evalúala en el punto para obtener la pendiente m y usa y-y₀=m(x-x₀).",
+    all: english ? "First identify the structure: composition, product, quotient, implicit equation, or tangent line. Then apply the matching rule step by step." : "Primero identifica la estructura: composición, producto, cociente, ecuación implícita o una recta tangente. Luego aplica la regla correspondiente paso a paso."
   }[topic] || "";
 
   if (/fuera|temario/.test(lower)) {
-    return "Puedo ayudarte con aritmética, álgebra, geometría, cálculo, estadística, álgebra lineal, matemática discreta y física matemática. Sube una imagen o elige una materia para comenzar.";
+    return english ? "I can help with arithmetic, algebra, geometry, calculus, statistics, linear algebra, discrete mathematics, and applied mathematics. Upload an image or choose a subject to begin." : "Puedo ayudarte con aritmética, álgebra, geometría, cálculo, estadística, álgebra lineal, matemática discreta y matemática aplicada. Sube una imagen o elige una materia para comenzar.";
   }
 
-  const subjectHint = subject === "algebra" ? "Define la incógnita, ordena los términos y comprueba sustituyendo." : subject === "geometry" ? "Dibuja la figura, anota los datos y elige la relación geométrica que conecta lo que buscas." : subject === "statistics" ? "Identifica la población, la variable y la medida que te están pidiendo antes de calcular." : guide;
-  return `Pista guiada para ${subject}:\n\n${subjectHint}\n\nEscribe la expresión o el paso que te confunde y lo resolvemos juntos sin saltarnos el razonamiento.`;
+  const subjectHint = subject === "algebra" ? (english ? "Define the unknown, organize the terms, and check by substitution." : "Define la incógnita, ordena los términos y comprueba sustituyendo.") : subject === "geometry" ? (english ? "Draw the figure, note the data, and choose the geometric relationship connecting what you seek." : "Dibuja la figura, anota los datos y elige la relación geométrica que conecta lo que buscas.") : subject === "statistics" ? (english ? "Identify the population, variable, and measure requested before calculating." : "Identifica la población, la variable y la medida que te están pidiendo antes de calcular.") : guide;
+  return english ? `Guided hint for ${subject}:\n\n${subjectHint}\n\nWrite the expression or step that is confusing you and we will work through it without skipping the reasoning.` : `Pista guiada para ${subject}:\n\n${subjectHint}\n\nEscribe la expresión o el paso que te confunde y lo resolvemos juntos sin saltarnos el razonamiento.`;
 }
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
@@ -158,10 +159,11 @@ app.post("/api/vision/tutor", quotaMiddleware, express.json({ limit: "15mb" }), 
     const vision = await visionRequest({ image, mimeType, prompt: req.body?.prompt, language, subject: req.body?.subject || "calculus", level: req.body?.level || "explore", curriculum });
     if (!vision.response.ok) throw new Error(await vision.response.text());
     const data = await vision.response.json();
-    return res.json({ mode: "vision", answer: await vision.parse(data) || "No pude interpretar la imagen.", model: process.env.OLLAMA_VISION_MODEL || process.env.AI_VISION_MODEL || "llava" });
+    return res.json({ mode: "vision", answer: await vision.parse(data) || (req.body?.language === "en" ? "I could not interpret the image." : "No pude interpretar la imagen."), model: process.env.OLLAMA_VISION_MODEL || process.env.AI_VISION_MODEL || "llava" });
   } catch (error) {
     console.warn("Visión Ollama no disponible:", error.message);
-    return res.json({ mode: "vision-fallback", answer: "Recibí tu material, pero el modelo de visión no está disponible todavía. Configura OLLAMA_VISION_MODEL (por ejemplo, llava) para analizar fotos y PDFs.", notice: "El archivo no se guardó en el servidor." });
+    const english = req.body?.language === "en";
+    return res.json({ mode: "vision-fallback", answer: english ? "I received your material, but the vision model is not available yet. Configure OLLAMA_VISION_MODEL (for example, llava) to analyze photos and PDFs." : "Recibí tu material, pero el modelo de visión no está disponible todavía. Configura OLLAMA_VISION_MODEL (por ejemplo, llava) para analizar fotos y PDFs.", notice: english ? "The file was not saved on the server." : "El archivo no se guardó en el servidor." });
   }
 });
 
@@ -267,8 +269,8 @@ app.post("/api/chat", quotaMiddleware, async (req, res) => {
       console.warn("Ollama respondió con error:", errorText);
       return res.json({
         mode: "fallback",
-        answer: localTutorAnswer(question, topic, subject),
-        notice: "Ollama no respondió correctamente; esta respuesta usa la guía curricular local."
+        answer: localTutorAnswer(question, topic, subject, language),
+        notice: language === "English" ? "Ollama did not respond correctly; this answer uses the local curriculum guide." : "Ollama no respondió correctamente; esta respuesta usa la guía curricular local."
       });
     }
 
@@ -280,8 +282,8 @@ app.post("/api/chat", quotaMiddleware, async (req, res) => {
     console.warn("Ollama no disponible; se activa el tutor local:", error.message);
     return res.json({
       mode: "fallback",
-      answer: localTutorAnswer(req.body?.question || "", req.body?.topic || "all", req.body?.subject || "calculus"),
-      notice: "Ollama no está disponible ahora; esta respuesta usa la guía curricular local."
+      answer: localTutorAnswer(req.body?.question || "", req.body?.topic || "all", req.body?.subject || "calculus", req.body?.language === "en" ? "English" : "Spanish"),
+      notice: req.body?.language === "en" ? "Ollama is not available now; this answer uses the local curriculum guide." : "Ollama no está disponible ahora; esta respuesta usa la guía curricular local."
     });
   }
 });
