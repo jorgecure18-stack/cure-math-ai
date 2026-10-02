@@ -13,7 +13,11 @@ const MATH_APPS_PATH = path.join(ROOT, "config", "math_apps.json");
 const app = express();
 const port = Number(process.env.PORT || 3000);
 app.set("trust proxy", 1);
-const AI_BASE_URL = String(process.env.AI_BASE_URL || "").replace(/\/$/, "");
+// Prefer the explicit compatible endpoint, but make OPENAI_API_KEY alone work
+// with the official OpenAI API as well.
+const AI_BASE_URL = String(
+  process.env.AI_BASE_URL || (process.env.OPENAI_API_KEY ? "https://api.openai.com/v1" : "")
+).replace(/\/$/, "");
 const AI_API_KEY = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || "";
 const AI_MODEL = process.env.AI_MODEL || process.env.OPENAI_MODEL || "gpt-4o";
 
@@ -239,7 +243,7 @@ app.get("/api/math-apps", (req, res) => {
   }
 });
 
-app.post("/api/chat", quotaMiddleware, async (req, res) => {
+async function handleTutorRequest(req, res) {
   try {
     const question = typeof req.body?.question === "string" ? req.body.question.trim() : "";
 
@@ -290,7 +294,13 @@ app.post("/api/chat", quotaMiddleware, async (req, res) => {
       notice: req.body?.language === "en" ? "Ollama is not available now; this answer uses the local curriculum guide." : "Ollama no está disponible ahora; esta respuesta usa la guía curricular local."
     });
   }
-});
+}
+
+// Canonical tutor endpoint for the public API.
+app.post("/api/tutor", quotaMiddleware, handleTutorRequest);
+
+// Backward-compatible alias used by older frontend builds.
+app.post("/api/chat", quotaMiddleware, handleTutorRequest);
 
 app.get("/api/curriculum", (_req, res) => {
   fs.readFile(CURRICULUM_PATH, "utf8", (err, data) => {
